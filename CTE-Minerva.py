@@ -1,13 +1,9 @@
 # %% CTE
 """
-Created on Fri Nov 27 14:47:27 2020
+Cool The Engine (Minerva version)
 
-@author: Julien
-
-Rewritten: Mehdi
-
-WARNING: This Python file was rewritten only for the Viserion_2023 project.
-Any changes might affect the results.
+This program is designed to compute the cooling
+performances of a regeneratively-cooled LOX/ethanol rocket engine.
 """
 import csv
 from pylab import *
@@ -28,10 +24,12 @@ import matplotlib.pyplot as plt
 print("██████████████████████████ Cool The Engine V 2.0.0 █████████████████████████")
 print("█                  Innovative Propulsion Laboratory - IPL                  █")
 # %% Engine initialisation
+mesh_size = 0.25
+
 "Viserion settings"
-plagex = "Viserion_X.txt"  # X coordinates of the Viserion
-plagey = "Viserion_Y.txt"  # Y coordinates of the Viserion
-plageinit = "Viserion_2023.txt"  # Viserion's parameters (found with CEA)
+plagex = f"input/{mesh_size}/x.txt"  # X coordinates of the Minerva
+plagey = f"input/{mesh_size}/y.txt"  # Y coordinates of the Minerva
+plageinit = "input/minerva_input.txt"  # Minerva's parameters (found with CEA)
 
 "Constant value"
 lim22 = 600

@@ -1,0 +1,16 @@
+c_init,1171.4
+c_col,1133.3
+debit_LOX,1.14
+debit_eth,0.815
+rho_init,1.6696
+Pc,2000000
+Tc,3107.62
+gamma_c,1.1455
+gamma_t,1.1519
+gamma_e,1.2033
+M,21.57
+Cstar,1714.4
+Dcol,0.03264
+Rcol,0.0087
+Ac,0.001488
+DiamCol,0.04352
