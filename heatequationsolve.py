@@ -5,44 +5,19 @@ Created on Sun Apr 11 20:47:01 2021
 @author: julie
 """
 
-from casthermo import *
+import casthermo as ct
 import numpy as np
-from matplotlib import pyplot as plt
-import scipy as sc
-
-"""
-pas=0.015
-epaisseur=0.001
-hauteur=0.0018
-largeur=0.0018
-dx=0.00005
-Hg=2600
-lamb=388
-Tg=3200
-Hl=59500
-Tl=158.5
-
-pas=0.015
-epaisseur=0.001
-hauteur=0.0015
-largeur=0.0012
-dx=0.0001
-Hg=8000
-lamb=390
-Tg=3000
-Hl=120000
-Tl=125
-"""
+import matplotlib.pyplot as plt
 
 
-def carto2D(pas, epaisseur, hauteur, largeur, dx, Hg, lamb, Tg, Hl, Tl, w, oui, leg):
+def carto2D(pas, epaisseur, hauteur, largeur, dx, Hg, lamb, Tg, Hl, Tl, w, oui, leg, where):
     # def de la zone paroi
     npxp = round(pas / (2 * dx) + 1, 0)
-    npyp = round((epaisseur) / dx + 1, 0)
+    npyp = round(epaisseur / dx + 1, 0)
     # print(npxp,npyp)
     # def de la zone ailette
     npxa = round(((pas - largeur) / (2 * dx)) + 1, 0)
-    npya = round((hauteur) / dx, 0)
+    npya = round(hauteur / dx, 0)
     # print(npxa,npya)
     # def du nombre de point à chercher
     nbp = npxp * npyp + npxa * npya
@@ -218,7 +193,7 @@ def carto2D(pas, epaisseur, hauteur, largeur, dx, Hg, lamb, Tg, Hl, Tl, w, oui, 
     # print(len(listing))
     # print(listing)
 
-    ###résolution de la matrice inversible
+    # résolution de la matrice inversible
     # shaping de la matrice inversible
     reso = np.zeros(shape=(int(nbp), int(nbp)))
     membre = np.zeros(shape=(int(nbp), 1))
@@ -234,15 +209,15 @@ def carto2D(pas, epaisseur, hauteur, largeur, dx, Hg, lamb, Tg, Hl, Tl, w, oui, 
             inv = 1
         # résolution des coefficients
         if listing[k][0] == 1:
-            a, b, c, d, x, plus = cas1(h, dx, lamb, Tf, inv)
+            a, b, c, d, x, plus = ct.cas1(h, dx, lamb, Tf, inv)
         elif listing[k][0] == 2:
-            a, b, c, d, x, plus = cas2(h, dx, lamb, Tf, inv)
+            a, b, c, d, x, plus = ct.cas2(h, dx, lamb, Tf, inv)
         elif listing[k][0] == 3:
-            a, b, c, d, x, plus = cas3(h, dx, lamb, Tf, inv)
+            a, b, c, d, x, plus = ct.cas3(h, dx, lamb, Tf, inv)
         elif listing[k][0] == 4:
-            a, b, c, d, x, plus = cas4(h, dx, lamb, Tf, inv)
+            a, b, c, d, x, plus = ct.cas4(h, dx, lamb, Tf, inv)
         elif listing[k][0] == 5:
-            a, b, c, d, x, plus = cas5(h, dx, lamb, Tf, inv)
+            a, b, c, d, x, plus = ct.cas5(h, dx, lamb, Tf, inv)
             # résolution de l'orientation
         if listing[k][1] == 0:
             coef1 = a
@@ -275,7 +250,7 @@ def carto2D(pas, epaisseur, hauteur, largeur, dx, Hg, lamb, Tg, Hl, Tl, w, oui, 
         insert = []
         pos = 1
         for z in listing[k][3]:
-            if z >= 0 and z <= (nbp - 1):
+            if 0 <= z <= (nbp - 1):
                 if pos == 1:
                     inn = [coef1, z]
                     insert.append(inn)
@@ -290,7 +265,7 @@ def carto2D(pas, epaisseur, hauteur, largeur, dx, Hg, lamb, Tg, Hl, Tl, w, oui, 
                     insert.append(inn)
                 else:
                     print("error placing")
-            pos = pos + 1
+            pos += 1
 
         # introduction des coefs dans la matrice
         for values in insert:
@@ -321,40 +296,49 @@ def carto2D(pas, epaisseur, hauteur, largeur, dx, Hg, lamb, Tg, Hl, Tl, w, oui, 
         temperature.append(t[0])
         if bis <= npxp:
             paroigas = paroigas + t[0]
-        bis = bis + 1
+        bis += 1
     if oui == 1:
-        print("█ Température moyenne à la paroi gas =", round(temperature[0]),
-              "K                              █")
-        print("█ Température moyenne paroi coolant  =", round(temperature[abop + 1]),
-              "K                              █")
-        print("█ Température maximum à la paroi     =", round(max(temperature)),
-              "K                              █")
+        # This is just for formatting
+        tg_avg = f"{round(temperature[0])}" if len(
+            f'{round(temperature[0])}') == 4 else f" {round(temperature[0])}"
+        tl_avg = f"{round(temperature[abop + 1])}" if len(
+            f'{round(temperature[abop + 1])}') == 4 else f" {round(temperature[abop + 1])}"
+        t_max = f"{round(max(temperature))}" if len(
+            f'{round(max(temperature))}') == 4 else f" {round(max(temperature))}"
+        print(f"█ Mean wall temperature at hot side  = {tg_avg} K                              █")
+        print(f"█ Mean wall temperature at cool side = {tl_avg} K                              █")
+        print(f"█ Maximum temperature in the wall    = {t_max} K                              █")
         if leg == 1:
-            a1 = 0.004
-            a2 = 0.0005
+            a1 = 0.003
+            a2 = -0.0025
+            a3 = 0.00025
+            a4 = -0.0025
+            a5 = 0.002
+            a6 = -0.0005
+        elif leg == 2:
+            a1 = 0.0015
+            a2 = -0.002
             a3 = 0.00025
             a4 = -0.002
-        elif leg == 2:
-            a1 = 0.002
-            a2 = 0.00025
-            a3 = 0.00025
-            a4 = -0.0015
-        plt.figure(dpi=200)
-        p = plt.scatter(abcisse, ordonee, c=temperature, marker='s', s=w, cmap='flag')  # rainbow#prism#flag
-        plt.text(a1, a2, 'Hot gases', horizontalalignment='center', verticalalignment='center')
-        plt.text(a3, a4, 'Coolant', horizontalalignment='center', verticalalignment='center')
-
-        plt.title("Distribution 2D des températures", fontsize=15)
-        plt.axis("equal")
-        plt.colorbar(p, shrink=0.4, aspect=15)
-        plt.show()
-
+            a5 = 0.001
+            a6 = -0.0005
+        # plt.figure(dpi=200)
+        # p = plt.scatter(abcisse, ordonee, c=temperature, marker='s', s=w, cmap='flag')  # rainbow#prism#flag
+        # plt.text(a1, a2, 'Hot gases', horizontalalignment='center', verticalalignment='center')
+        # plt.text(a3, a4, 'Coolant', horizontalalignment='center', verticalalignment='center')
+        #
+        # plt.title("Distribution 2D des températures", fontsize=15)
+        # plt.axis("equal")
+        # plt.colorbar(p, shrink=0.4, aspect=15)
+        # plt.show()
+        title = "2D temperature distribution (in K)" + where
         plt.figure(dpi=200)
         p = plt.scatter(abcisse, ordonee, c=temperature, marker='s', s=w, cmap='rainbow')  # rainbow#prism#flag
-        plt.text(a1, a2, 'Hot gases', horizontalalignment='center', verticalalignment='center')
+        plt.text(a1, a2, 'Rib', horizontalalignment='center', verticalalignment='center')
         plt.text(a3, a4, 'Coolant', horizontalalignment='center', verticalalignment='center')
+        plt.text(a5, a6, 'Wall', horizontalalignment='center', verticalalignment='center')
 
-        plt.title("Distribution 2D des températures", fontsize=15)
+        plt.title(title, fontsize=15)
         plt.axis("equal")
         plt.colorbar(p, shrink=0.4, aspect=15)
         plt.show()
