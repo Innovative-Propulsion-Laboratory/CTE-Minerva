@@ -170,17 +170,22 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
             dA_2 = (np.pi * D * dl) / nbc
 
             # New temperature at next point
-            delta_T_coolant = ((flux * dA_1) / ((debit_mass_coolant / nbc) * coolant_cp_list[i]))
+            delta_T_coolant=0
+            """delta_T_coolant = ((flux * dA_1) / ((debit_mass_coolant / nbc) * coolant_cp_list[i]))"""
             new_coolant_temp = coolant_temp_list[i] + delta_T_coolant
 
             # Solving Colebrook's formula to obtain the Darcy-Weisbach friction factor
             frict_factor = t.darcy_weisbach(Dhy, Re_cool, roughness)
 
-            # Computing pressure loss with the Darcy-Weisbach friction factor
-            delta_p = 0.5 * frict_factor * (dl / Dhy) * coolant_density_list[i] * v_cool ** 2
+            # Computing pressure loss with the Darcy-Weisbach friction factor (no pressure loss taken into account)
+            delta_p=0
+            new_coolant_pressure = coolant_pressure_list[i]-delta_p
+            """delta_p = 0.5 * frict_factor * (dl / Dhy) * coolant_density_list[i] * v_cool ** 2
+            """
             new_coolant_pressure = coolant_pressure_list[i] - delta_p
 
-            # Computing the new properties of the CH4
+
+            # Computing the new properties of the ethanol (properties considered constant)
             if new_coolant_pressure < 0:
                 raise ValueError("Negative pressure ! Pressure drop is too high.")
             new_cool_visc = flp.viscosity(P=new_coolant_pressure, T=new_coolant_temp, fluid=fluid)
@@ -188,6 +193,8 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
             new_cool_cp = flp.cp(P=new_coolant_pressure, T=new_coolant_temp, fluid=fluid)
             new_cool_dens = flp.density(P=new_coolant_pressure, T=new_coolant_temp, fluid=fluid)
             new_cool_sound_spd = flp.sound_speed(P=new_coolant_pressure, T=new_coolant_temp, fluid=fluid)
+
+
 
             # Store the results
             hotgas_viscosity_list.append(hotgas_visc)

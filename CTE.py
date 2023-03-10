@@ -16,6 +16,7 @@ from main_solver import mainsolver
 
 # Data
 from Canaux import canaux
+from CoolProp.CoolProp import PropsSI
 
 # Graphics
 from heatequationsolve import carto2D
@@ -36,15 +37,15 @@ print("█                                                                      
 # %% Initial definitions
 
 mesh_size = 0.25  # Distance between two points of calculation
-x_coords_filename = f"input/{mesh_size}/x.txt"  # X coordinates of the Viserion
-y_coords_filename = f"input/{mesh_size}/y.txt"  # Y coordinates of the Viserion
-input_CEA_data = "input/Viserion_2023.txt"  # Viserion's parameters (found with CEA)
+x_coords_filename = f"input/{mesh_size}/x.txt"  # X coordinates of the Minerva
+y_coords_filename = f"input/{mesh_size}/y.txt"  # Y coordinates of the Minerva
+input_CEA_data = "input/Minerva_project.txt"  # Minerva's parameters (found with CEA)
 
 # Constant input_data_list
 size2 = 16  # Used for the height of the display in 3D view
 limitation = 0.05  # used to build the scales in 3D view
 figure_dpi = 150  # Dots Per Inch (DPI) for all figures (lower=faster)
-plot_detail = 3  # 0=No plots; 1=Important plots; 3=All plots
+plot_detail = 1  # 0=No plots; 1=Important plots; 3=All plots
 show_3d_plots = False
 show_2D_temperature = False
 do_final_3d_plot = False
@@ -58,7 +59,7 @@ input_data_list = [row[1] for row in input_data_reader]
 sound_speed_init = float(input_data_list[0])  # Sound velocity in the chamber
 sound_speed_throat = float(input_data_list[1])  # Sound velocity in the throat
 debit_LOX = float(input_data_list[2])  # LOX debit
-debit_mass_coolant = float(input_data_list[3])  # CH4 debit
+debit_mass_coolant = float(input_data_list[3])  # ethanol debit
 rho_init = float(input_data_list[4])  # Initial density of the gases
 Pc = float(input_data_list[5])  # Pressure in the chamber
 Tc = float(input_data_list[6])  # Combustion temperature
@@ -80,7 +81,7 @@ curv_radius_after_throat = float(input_data_list[13])  # Radius of curvature aft
 area_throat = float(input_data_list[14])  # Area at the throat
 diam_throat = float(input_data_list[15])  # Throat diameter
 
-# %% Import of the (X,Y) coordinates of the Viserion
+# %% Import of the (X,Y) coordinates of the Minerva
 x_coords_reader = csv.reader(open(x_coords_filename, "r"))
 y_coords_reader = csv.reader(open(y_coords_filename, "r"))
 
@@ -93,7 +94,7 @@ nb_points = len(x_coord_list)  # Number of points (or the index of the end of th
 if plot_detail >= 3:
     plt.figure(dpi=figure_dpi)
     plt.plot(x_coord_list, y_coord_list, color='black')
-    plt.title('Profile of the Viserion (left : chamber and right : divergent)', color='black')
+    plt.title('Profile of the Minerva (left : chamber and right : divergent)', color='black')
     plt.show()
 
 # Computation and plot of the mesh density of the engine
@@ -270,20 +271,20 @@ if plot_detail >= 2 and show_3d_plots:
 print("█ Computing channel geometric                                              █")
 print("█                                                                          █")
 
-nbc = 40  # Number of channels
+nbc = 42  # Number of channels
 manifold_pos = 0.104  # Position of the manifold from the throat (in m)
 
 # Widths
-lrg_inj = 0.0045  # Width of the channel in at the injection plate (in m)
-lrg_conv = 0.0025  # Width of the channel at the end of the cylindrical chamber (in m)
-lrg_col = 0.0015  # Width of the channel in the throat (in m)
-lrg_tore = 0.002  # Width of the channel at the manifold (in m)
+lrg_inj = 0.001  # Width of the channel in at the injection plate (in m)
+lrg_conv = 0.001  # Width of the channel at the end of the cylindrical chamber (in m)
+lrg_col = 0.0007  # Width of the channel in the throat (in m)
+lrg_tore = 0.0015  # Width of the channel at the manifold (in m)
 
 # Heights
-ht_inj = 0.002  # Height of the channel at the injection plate (in m)
-ht_conv = 0.002  # Height of the channel at the end of the cylindrical chamber (in m)
-ht_col = 0.0015  # Height of the channel in the throat (in m)
-ht_tore = 0.002  # Height of the channel at the manifold (in m)
+ht_inj = 0.001  # Height of the channel at the injection plate (in m)
+ht_conv = 0.001  # Height of the channel at the end of the cylindrical chamber (in m)
+ht_col = 0.0007  # Height of the channel in the throat (in m)
+ht_tore = 0.0015  # Height of the channel at the manifold (in m)
 
 # Thickness
 e_conv = 0.001  # Thickness of the wall at the chamber (in m)
@@ -298,7 +299,7 @@ n5 = 1  # Thickness convergent
 n6 = 1  # Thickness divergent
 
 # %% Material selection
-material = 1
+material = 2
 if material == 0:
     material_name = "pure copper"
 elif material == 1:
@@ -307,12 +308,12 @@ elif material == 2:
     material_name = "inconel"
 
 # %% Properties of the coolant
-fluid = "Methane"
-density_cool_init = 425  # Density of the CH4 (kg/m^3)
-Temp_cool_init = 110  # Initial temperature of the coolant (K)
+fluid = "Ethanol"
+Temp_cool_init = 352  # Initial temperature of the coolant (K)
+Pressure_cool_init = 2700000  # Pressure of the coolant at inlet (Pa)
+density_cool_init = PropsSI("D", "T", Temp_cool_init, "P", Pressure_cool_init, "Ethanol")  # Density of the ethanol (kg/m^3)
 debit_volum_coolant = debit_mass_coolant / density_cool_init  # Total volumic flow rate of the coolant (m^3/s)
-Pressure_cool_init = 7000000  # Pressure of the coolant at inlet (Pa)
-roughness = 15e-6  # Roughness (m)
+roughness = 50e-6  # Roughness (m)
 
 # %% Computation of channel geometry
 
