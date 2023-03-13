@@ -214,10 +214,10 @@ if plot_detail >= 2 and show_3d_plots:
 x_Molfrac = [x_coord_list[0], x_coord_list[i_throat], x_coord_list[-1]]  # Location associated to the molar mass
 
 # Value of the molar fraction of the H20 after interpolation
-Molfrac_H2O = np.interp(x_coord_list, x_Molfrac, [xH2O_c_input, xH2O_t_input, xH2O_e_input])  
+Molfrac_H2O = np.interp(x_coord_list, x_Molfrac, [xH2O_c_input, xH2O_t_input, xH2O_e_input])
 
 # Value of the molar fraction of the CO2 after interpolation
-Molfrac_CO2 = np.interp(x_coord_list, x_Molfrac, [xCO2_c_input, xCO2_t_input, xCO2_e_input])  
+Molfrac_CO2 = np.interp(x_coord_list, x_Molfrac, [xCO2_c_input, xCO2_t_input, xCO2_e_input])
 
 PH2O_list = [pressure_list[i] * Molfrac_H2O[i] for i in range(0, nb_points)]  # Partial pressure of the H2O
 PCO2_list = [pressure_list[i] * Molfrac_CO2[i] for i in range(0, nb_points)]  # Partial pressure of the CO2
@@ -230,7 +230,7 @@ if plot_detail >= 3:
     plt.title("Molar fraction of as a function of the engine axis")
     plt.legend(loc='center left')
     plt.show()
-    
+
     plt.figure(dpi=figure_dpi)
     plt.plot(x_coord_list, PH2O_list, color='blue', label='H20')
     plt.plot(x_coord_list, PCO2_list, color='orange', label='C02')
@@ -311,7 +311,8 @@ elif material == 2:
 fluid = "Ethanol"
 Temp_cool_init = 352  # Initial temperature of the coolant (K)
 Pressure_cool_init = 2700000  # Pressure of the coolant at inlet (Pa)
-density_cool_init = PropsSI("D", "T", Temp_cool_init, "P", Pressure_cool_init, "Ethanol")  # Density of the ethanol (kg/m^3)
+density_cool_init = PropsSI("D", "T", Temp_cool_init, "P", Pressure_cool_init,
+                            "Ethanol")  # Density of the ethanol (kg/m^3)
 debit_volum_coolant = debit_mass_coolant / density_cool_init  # Total volumic flow rate of the coolant (m^3/s)
 roughness = 50e-6  # Roughness (m)
 
@@ -399,7 +400,7 @@ hotgas_prandtl_list, hg_list, hotwall_temp_list, coldwall_temp_list, flux_list, 
 sigma_list, coolant_reynolds_list, tempcoolant_list, visccoolant_list, \
 condcoolant_list, cpcoolant_list, densitycoolant_list, velocitycoolant_list, \
 pcoolant_list, wallcond_list, sound_speed_coolant_list, hlnormal_list, \
-qRad_list, q_list_CO2, q_list_H2O \
+qRad_list, q_list_CO2, q_list_H2O, critical_heat_flux_list \
     = mainsolver(data_hotgas, data_coolant, data_channel, data_chamber)
 
 end_m = time.perf_counter()  # End of the main solution timer
@@ -415,6 +416,11 @@ else:
 
 # %% Display of the 1D analysis results
 print("█                                                                          █")
+
+plt.figure(dpi=figure_dpi)
+plt.plot(xcanaux, critical_heat_flux_list, color="red")
+plt.title('Critical Heat Flux')
+plt.show()
 
 if plot_detail >= 1:
     start_d1 = time.perf_counter()  # Start of the display of 1D timer
@@ -477,7 +483,7 @@ if plot_detail >= 2:
     plt.title('Volumic mass of the coolant as a function of engine axis')
     plt.show()
 
-if plot_detail >=3:
+if plot_detail >= 3:
     plt.figure(dpi=figure_dpi)
     plt.plot(xcanaux, coolant_reynolds_list, color='blue')
     plt.title("Reynolds number of the coolant as a function of the engine axis")
@@ -754,7 +760,8 @@ if write_in_csv:
                                         hotwall_temp_list[i], flux_list[i], tempcoolant_list[i],
                                         coolant_reynolds_list[i], hlnormal_list[i], densitycoolant_list[i],
                                         visccoolant_list[i],
-                                        condcoolant_list[i], cpcoolant_list[i], velocitycoolant_list[i], pcoolant_list[i],
+                                        condcoolant_list[i], cpcoolant_list[i], velocitycoolant_list[i],
+                                        pcoolant_list[i],
                                         wallcond_list[i], newxhtre[i], newyhtre[i]))
         else:
             valuexport_writer.writerow(

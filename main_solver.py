@@ -4,7 +4,6 @@ from tqdm import tqdm
 import cte_tools as t
 
 
-
 def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
     """
     This is the main function used for solving the 1D case.
@@ -47,6 +46,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
     q_list_H2O = []
     q_list_CO2 = []
     qRad_list = []
+    critical_heat_flux_list = []
     index_throat = ycanaux.index(min(ycanaux))
 
     # This is to avoid oscillations near the inlet because of division by zero
@@ -82,6 +82,12 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
                                                                                       molar_mass,
                                                                                       gamma_list[i])
 
+            critical_heat_flux = t.compute_chf(coolant_pressure_list[i],
+                                               coolant_temp_list[i],
+                                               coolant_velocity_list[i],
+                                               coolant_density_list[i],
+                                               coolant_reynolds_list[i])
+
             # If last point in the list
             if i == len(xcanaux) - 1:
                 # Distance between current point and the previous (Pythagoras)
@@ -111,9 +117,8 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
                         (Pc / c_star) ** 0.8) * ((diam_throat / curv_radius_pre_throat) ** 0.1) * (
                               (area_throat / cross_section_area_list[i]) ** 0.9)) * sigma
 
-                # Coolant-side convective heat transfer coefficient from Taylor (NASA TN D-4332)
-                Nu = 0.023 * Re_cool ** 0.705 * Pr_cool ** 0.8 * (coldwall_temp / coolant_temp_list[i]) ** -(
-                        -0.57 - 1.59 * Dhy / length_from_inlet)
+                # Coolant-side convective heat transfer coefficient (Modified Gnielinski by M.M. Sarafraz)
+                Nu = 0.02326 * (Re_cool ** 0.83 - 100) * Pr_cool ** 0.4201
 
                 # Nusselt number correction for the channel roughness
                 xi = t.darcy_weisbach(Dhy, Re_cool, roughness) / t.darcy_weisbach(Dhy, Re_cool, 0)
@@ -170,7 +175,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
             dA_2 = (np.pi * D * dl) / nbc
 
             # New temperature at next point
-            delta_T_coolant=0
+            delta_T_coolant = 0
             """delta_T_coolant = ((flux * dA_1) / ((debit_mass_coolant / nbc) * coolant_cp_list[i]))"""
             new_coolant_temp = coolant_temp_list[i] + delta_T_coolant
 
@@ -178,12 +183,11 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
             frict_factor = t.darcy_weisbach(Dhy, Re_cool, roughness)
 
             # Computing pressure loss with the Darcy-Weisbach friction factor (no pressure loss taken into account)
-            delta_p=0
-            new_coolant_pressure = coolant_pressure_list[i]-delta_p
+            delta_p = 0
+            new_coolant_pressure = coolant_pressure_list[i] - delta_p
             """delta_p = 0.5 * frict_factor * (dl / Dhy) * coolant_density_list[i] * v_cool ** 2
             """
             new_coolant_pressure = coolant_pressure_list[i] - delta_p
-
 
             # Computing the new properties of the ethanol (properties considered constant)
             if new_coolant_pressure < 0:
@@ -194,8 +198,6 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
             new_cool_dens = flp.density(P=new_coolant_pressure, T=new_coolant_temp, fluid=fluid)
             new_cool_sound_spd = flp.sound_speed(P=new_coolant_pressure, T=new_coolant_temp, fluid=fluid)
 
-
-
             # Store the results
             hotgas_viscosity_list.append(hotgas_visc)
             hotgas_cp_list.append(hotgas_cp)
@@ -205,8 +207,8 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
             hl_normal_list.append(hl)
             hl_corrected_list.append(hl_cor)
             hl_corrected_list_2.append(hl_cor2)
-            hotwall_temp_list.append(coldwall_temp)
-            coldwall_temp_list.append(hotwall_temp)
+            hotwall_temp_list.append(hotwall_temp)
+            coldwall_temp_list.append(coldwall_temp)
             flux_list.append(flux)
             sigma_list.append(sigma)
             wall_cond_list.append(wall_cond)
@@ -220,6 +222,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
             qRad_list.append(qRad)
             q_list_CO2.append(qC)
             q_list_H2O.append(qW)
+            critical_heat_flux_list.append(critical_heat_flux)
             pbar_main.update(1)
 
         return hl_corrected_list, hl_corrected_list_2, hotgas_viscosity_list, \
@@ -228,4 +231,5 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
                coolant_reynolds_list, coolant_temp_list, coolant_viscosity_list, \
                coolant_cond_list, coolant_cp_list, coolant_density_list, \
                coolant_velocity_list, coolant_pressure_list, wall_cond_list, \
-               sound_speed_list, hl_normal_list, qRad_list, q_list_CO2, q_list_H2O
+               sound_speed_list, hl_normal_list, qRad_list, q_list_CO2, \
+               q_list_H2O, critical_heat_flux_list
