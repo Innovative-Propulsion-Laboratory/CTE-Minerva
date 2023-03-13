@@ -69,8 +69,8 @@ gamma_e_input = float(input_data_list[9])  # Gamma at the exit
 molar_mass = float(input_data_list[10])  # Molar mass of the gases
 c_star = float(input_data_list[11])  # Caracteristic velocity
 xH2O_c_input = float(input_data_list[16])  # Molar fraction of the H2O in the chamber
-xH2O_t_input = float(input_data_list[17])  # Molar fraction of the H20 in the throat
-xH2O_e_input = float(input_data_list[18])  # Molar fraction of the H20 at the exit
+xH2O_t_input = float(input_data_list[17])  # Molar fraction of the H2O in the throat
+xH2O_e_input = float(input_data_list[18])  # Molar fraction of the H2O at the exit
 xCO2_c_input = float(input_data_list[19])  # Molar fraction of the CO2 in the chamber
 xCO2_t_input = float(input_data_list[20])  # Molar fraction of the CO2 in the throat
 xCO2_e_input = float(input_data_list[21])  # Molar fraction of the CO2 at the exit
@@ -225,15 +225,15 @@ PCO2_list = [pressure_list[i] * Molfrac_CO2[i] for i in range(0, nb_points)]  # 
 # Plots of molar fraction and partial pressure
 if plot_detail >= 3:
     plt.figure(dpi=figure_dpi)
-    plt.plot(x_coord_list, Molfrac_H2O, color='blue', label='H20')
-    plt.plot(x_coord_list, Molfrac_CO2, color='orange', label='C02')
+    plt.plot(x_coord_list, Molfrac_H2O, color='blue', label='H2O')
+    plt.plot(x_coord_list, Molfrac_CO2, color='orange', label='CO2')
     plt.title("Molar fraction of as a function of the engine axis")
     plt.legend(loc='center left')
     plt.show()
 
     plt.figure(dpi=figure_dpi)
-    plt.plot(x_coord_list, PH2O_list, color='blue', label='H20')
-    plt.plot(x_coord_list, PCO2_list, color='orange', label='C02')
+    plt.plot(x_coord_list, PH2O_list, color='blue', label='H2O')
+    plt.plot(x_coord_list, PCO2_list, color='orange', label='CO2')
     plt.title("Partial static pressure (in Pa) of as a function of the engine axis")
     plt.legend(loc='center left')
     plt.show()
@@ -275,10 +275,10 @@ nbc = 42  # Number of channels
 manifold_pos = 0.104  # Position of the manifold from the throat (in m)
 
 # Widths
-lrg_inj = 0.00932  # Width of the channel in at the injection plate (in m)
-lrg_conv = 0.00932  # Width of the channel at the end of the cylindrical chamber (in m)
+lrg_inj = 0.00947  # Width of the channel in at the injection plate (in m)
+lrg_conv = 0.00947  # Width of the channel at the end of the cylindrical chamber (in m)
 lrg_col = 0.0024  # Width of the channel in the throat (in m)
-lrg_tore = 0.00745  # Width of the channel at the manifold (in m)
+lrg_tore = 0.00744  # Width of the channel at the manifold (in m)
 
 # Heights
 ht_inj = 0.0007  # Height of the channel at the injection plate (in m)
@@ -291,8 +291,8 @@ e_conv = 0.001  # Thickness of the wall at the chamber (in m)
 e_col = 0.001  # Thickness of the wall at the throat (in m)
 e_tore = 0.001  # Thickness of the wall at the manifold (in m)
 
-n1 = 0.01  # Width convergent
-n2 = 0.01  # Width divergent
+n1 = 0.001  # Width convergent
+n2 = 0.001  # Width divergent
 n3 = 1  # Height convergent
 n4 = 1  # Height divergent
 n5 = 1  # Thickness convergent
@@ -318,7 +318,6 @@ roughness = 50e-6  # Roughness (m)
 
 # %% Computation of channel geometry
 
-# Pack the data in tuples
 profile = (x_coord_list, y_coord_list)
 widths = (lrg_inj, lrg_conv, lrg_col, lrg_tore)
 heights = (ht_inj, ht_conv, ht_col, ht_tore)
@@ -326,7 +325,8 @@ thicknesses = (e_conv, e_col, e_tore)
 coeffs = (n1, n2, n3, n4, n5, n6)
 
 # Compute dimensions
-xcanaux, ycanaux, larg_canal, larg_ailette_list, ht_canal, wall_thickness, area_channel, nb_points_channel, y_coord_avec_canaux \
+xcanaux, ycanaux, larg_canal, larg_ailette_list, ht_canal, wall_thickness, area_channel, nb_points_channel, \
+y_coord_avec_canaux \
     = canaux(profile, widths, heights, thicknesses, coeffs, manifold_pos, debit_volumique_total_cool, nbc, plot_detail,
              write_in_csv, figure_dpi)
 
