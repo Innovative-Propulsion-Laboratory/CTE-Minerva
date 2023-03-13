@@ -45,7 +45,7 @@ input_CEA_data = "input/Minerva_project.txt"  # Minerva's parameters (found with
 size2 = 16  # Used for the height of the display in 3D view
 limitation = 0.05  # used to build the scales in 3D view
 figure_dpi = 150  # Dots Per Inch (DPI) for all figures (lower=faster)
-plot_detail = 1  # 0=No plots; 1=Important plots; 3=All plots
+plot_detail = 0  # 0=No plots; 1=Important plots; 3=All plots
 show_3d_plots = False
 show_2D_temperature = False
 do_final_3d_plot = False
@@ -59,7 +59,7 @@ input_data_list = [row[1] for row in input_data_reader]
 sound_speed_init = float(input_data_list[0])  # Sound velocity in the chamber
 sound_speed_throat = float(input_data_list[1])  # Sound velocity in the throat
 debit_LOX = float(input_data_list[2])  # LOX debit
-debit_mass_coolant = float(input_data_list[3])  # ethanol debit
+debit_mass_coolant = float(input_data_list[3])  # Ethanol debit
 rho_init = float(input_data_list[4])  # Initial density of the gases
 Pc = float(input_data_list[5])  # Pressure in the chamber
 Tc = float(input_data_list[6])  # Combustion temperature
@@ -245,7 +245,7 @@ with tqdm(total=nb_points - 1,
           unit="|   █", bar_format="{l_bar}{bar}{unit}",
           ncols=76) as progressbar:
     for i in range(0, nb_points - 1):
-        temperature = t.temperature_solv(mach_list[i], mach_list[i + 1], hotgas_temp_list[i], gamma_list[i])
+        temperature = t.temperature_hotgas_solv(mach_list[i], mach_list[i + 1], hotgas_temp_list[i], gamma_list[i])
         hotgas_temp_list.append(temperature)
         progressbar.update(1)
 
@@ -309,11 +309,11 @@ elif material == 2:
 
 # %% Properties of the coolant
 fluid = "Ethanol"
-Temp_cool_init = 352  # Initial temperature of the coolant (K)
-Pressure_cool_init = 2700000  # Pressure of the coolant at inlet (Pa)
+Temp_cool_init = 352  # Initial temperature of the coolant (in K)
+Pressure_cool_init = 2700000  # Pressure of the coolant at inlet (in Pa)
 density_cool_init = PropsSI("D", "T", Temp_cool_init, "P", Pressure_cool_init,
-                            "Ethanol")  # Density of the ethanol (kg/m^3)
-debit_volum_coolant = debit_mass_coolant / density_cool_init  # Total volumic flow rate of the coolant (m^3/s)
+                            fluid)  # Density of the ethanol (in kg/m^3)
+debit_volumique_total_cool = debit_mass_coolant / density_cool_init  # Total volumic flow rate of the coolant (in m^3/s)
 roughness = 50e-6  # Roughness (m)
 
 # %% Computation of channel geometry
@@ -326,18 +326,18 @@ thicknesses = (e_conv, e_col, e_tore)
 coeffs = (n1, n2, n3, n4, n5, n6)
 
 # Compute dimensions
-xcanaux, ycanaux, larg_canal, larg_ailette_list, ht_canal, wall_thickness, area_channel, nb_points_channel \
-    = canaux(profile, widths, heights, thicknesses, coeffs, manifold_pos, debit_volum_coolant, nbc, plot_detail,
+xcanaux, ycanaux, larg_canal, larg_ailette_list, ht_canal, wall_thickness, area_channel, nb_points_channel, y_coord_avec_canaux \
+    = canaux(profile, widths, heights, thicknesses, coeffs, manifold_pos, debit_volumique_total_cool, nbc, plot_detail,
              write_in_csv, figure_dpi)
 
 # Write the dimensions of the channels in a CSV file
 file_name = "output/channelvalue.csv"
 with open(file_name, "w", newline="") as file:
     writer = csv.writer(file)
-    writer.writerow(("Engine x", "Engine y", "Channel width", "Rib width",
+    writer.writerow(("Engine x", "Engine y", "y coolant wall", "Channel width", "Rib width",
                      "Channel height", "Chamber wall thickness", "Channel area"))
     for i in range(0, nb_points_channel):
-        writer.writerow((xcanaux[i], ycanaux[i], larg_canal[i], larg_ailette_list[i],
+        writer.writerow((xcanaux[i], y_coord_avec_canaux[i], ycanaux[i], larg_canal[i], larg_ailette_list[i],
                          ht_canal[i], wall_thickness[i], area_channel[i]))
 
 end_init_time = time.perf_counter()  # End of the initialisation timer
@@ -360,6 +360,7 @@ larg_canal.reverse()
 area_channel.reverse()
 ht_canal.reverse()
 ycanaux.reverse()
+y_coord_avec_canaux.reverse()
 # We reverse the lists in order to calculate from the manifold to the injection
 
 # Save the data for exporting, before altering the original lists
@@ -391,7 +392,7 @@ data_hotgas = (hotgas_temp_list, molar_mass, gamma_list, Pc, c_star, PH2O_list, 
 data_coolant = (Temp_cool_init, Pressure_cool_init, fluid, debit_mass_coolant)
 data_channel = (xcanaux, ycanaux, larg_canal, larg_ailette_list, ht_canal,
                 wall_thickness, area_channel, nb_points_channel)
-data_chamber = (nbc, diam_throat, curv_radius_pre_throat, area_throat,
+data_chamber = (y_coord_avec_canaux, nbc, diam_throat, curv_radius_pre_throat, area_throat,
                 roughness, cross_section_area_list, mach_list, material_name)
 
 # Call the main solving loop
@@ -482,6 +483,14 @@ if plot_detail >= 2:
     plt.plot(xcanaux, densitycoolant_list, color='blue')
     plt.title('Volumic mass of the coolant as a function of engine axis')
     plt.show()
+    
+    plt.figure(dpi=figure_dpi)
+    plt.plot(xcanaux, q_list_CO2, color='r', label='CO2')
+    plt.plot(xcanaux, q_list_H2O, color='b', label='H2O')
+    plt.plot(xcanaux, qRad_list, color='g', label='total')
+    plt.title('Radiative heat flux(W/m2)')
+    plt.legend()
+    plt.show()
 
 if plot_detail >= 3:
     plt.figure(dpi=figure_dpi)
@@ -535,14 +544,6 @@ if plot_detail >= 3:
     plt.figure(dpi=figure_dpi)
     plt.plot(xcanaux, sound_speed_coolant_list, color='pink')
     plt.title('Sound velocity of the coolant (in m/s) as a function of engine axis')
-    plt.show()
-
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, q_list_CO2, color='r', label='CO2')
-    plt.plot(xcanaux, q_list_H2O, color='b', label='H2O')
-    plt.plot(xcanaux, qRad_list, color='g', label='total')
-    plt.title('Radiative heat flux(W/m2)')
-    plt.legend()
     plt.show()
 
 if plot_detail >= 1 and show_3d_plots:
@@ -679,6 +680,7 @@ cpcoolant_list.reverse()
 pcoolant_list.reverse()
 PH2O_list.reverse()
 PCO2_list.reverse()
+y_coord_avec_canaux.reverse()
 
 # %% Preparation of the lists for CAD modelisation
 "Changing the coordinates of the height of the channels (otherwise it is geometrically wrong)"
