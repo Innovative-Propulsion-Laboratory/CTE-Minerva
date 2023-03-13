@@ -121,14 +121,14 @@ def compute_chf(P_SI, T_SI, V_SI, rho_SI, Re):
 
     # Mass flux
     G_SI = rho_SI * V_SI
-    G_IMP = 703.07 * G_SI
+    G_IMP = (1 / 703.07) * G_SI
 
     # Latent heat of vaporisation
     # (http://www.coolprop.org/coolprop/HighLevelAPI.html#vapor-liquid-and-saturation-states)
     H_vap = PropsSI('H', 'P', P_SI, 'Q', 1, 'Ethanol')
     H_liq = PropsSI('H', 'P', P_SI, 'Q', 0, 'Ethanol')
     H_fg_SI = H_vap - H_liq  # J/kg
-    H_fg_IMP = 2326 * H_fg_SI  # BTU/lb
+    H_fg_IMP = (1 / 2326) * H_fg_SI  # BTU/lb
 
     # Heat capacity at constant pressure
     cp_SI = PropsSI("CPMASS", "T", T_SI, "P", P_SI, 'Ethanol')  # J/(kg.K)
@@ -153,5 +153,5 @@ def compute_chf(P_SI, T_SI, V_SI, rho_SI, Re):
     # Critical Heat Flux
     CHF_IMP = G_IMP * H_fg_IMP * C * Re ** (-0.5)  # BTU/(in².s)
     CHF_SI = 1634246 * CHF_IMP  # W/m²
-    
+
     return CHF_SI

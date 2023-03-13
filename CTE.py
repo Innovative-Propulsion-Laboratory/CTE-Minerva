@@ -45,7 +45,7 @@ input_CEA_data = "input/Minerva_project.txt"  # Minerva's parameters (found with
 size2 = 16  # Used for the height of the display in 3D view
 limitation = 0.05  # used to build the scales in 3D view
 figure_dpi = 150  # Dots Per Inch (DPI) for all figures (lower=faster)
-plot_detail = 0  # 0=No plots; 1=Important plots; 3=All plots
+plot_detail = 3  # 0=No plots; 1=Important plots; 3=All plots
 show_3d_plots = False
 show_2D_temperature = False
 do_final_3d_plot = False
@@ -275,24 +275,24 @@ nbc = 42  # Number of channels
 manifold_pos = 0.104  # Position of the manifold from the throat (in m)
 
 # Widths
-lrg_inj = 0.001  # Width of the channel in at the injection plate (in m)
-lrg_conv = 0.001  # Width of the channel at the end of the cylindrical chamber (in m)
-lrg_col = 0.0007  # Width of the channel in the throat (in m)
-lrg_tore = 0.0015  # Width of the channel at the manifold (in m)
+lrg_inj = 0.00932  # Width of the channel in at the injection plate (in m)
+lrg_conv = 0.00932  # Width of the channel at the end of the cylindrical chamber (in m)
+lrg_col = 0.0024  # Width of the channel in the throat (in m)
+lrg_tore = 0.00745  # Width of the channel at the manifold (in m)
 
 # Heights
-ht_inj = 0.001  # Height of the channel at the injection plate (in m)
-ht_conv = 0.001  # Height of the channel at the end of the cylindrical chamber (in m)
+ht_inj = 0.0007  # Height of the channel at the injection plate (in m)
+ht_conv = 0.0007  # Height of the channel at the end of the cylindrical chamber (in m)
 ht_col = 0.0007  # Height of the channel in the throat (in m)
-ht_tore = 0.0015  # Height of the channel at the manifold (in m)
+ht_tore = 0.0007  # Height of the channel at the manifold (in m)
 
 # Thickness
 e_conv = 0.001  # Thickness of the wall at the chamber (in m)
 e_col = 0.001  # Thickness of the wall at the throat (in m)
 e_tore = 0.001  # Thickness of the wall at the manifold (in m)
 
-n1 = 1  # Width convergent
-n2 = 1  # Width divergent
+n1 = 0.01  # Width convergent
+n2 = 0.01  # Width divergent
 n3 = 1  # Height convergent
 n4 = 1  # Height divergent
 n5 = 1  # Thickness convergent
@@ -418,28 +418,23 @@ else:
 # %% Display of the 1D analysis results
 print("█                                                                          █")
 
-plt.figure(dpi=figure_dpi)
-plt.plot(xcanaux, critical_heat_flux_list, color="red")
-plt.title('Critical Heat Flux')
-plt.show()
-
 if plot_detail >= 1:
     start_d1 = time.perf_counter()  # Start of the display of 1D timer
     print("█ Display of results                                                       █")
     print("█                                                                          █")
     plt.figure(dpi=figure_dpi)
     plt.plot(xcanaux, hlcor_list_2, color='blue', label='Hl corrected (Luka Denies)')
-    plt.plot(xcanaux, hlcor_list, color='green', label='Hl corrected (Julien)')
+    plt.plot(xcanaux, hlcor_list, color='green', label='Hl corrected')
     plt.plot(xcanaux, hlnormal_list, color='cyan', label='Hl')
     plt.title("Convection coeff as a function of the engine axis")
     plt.legend(loc='upper left')
     plt.show()
 
     plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, coldwall_temp_list, color='blue', label='Twl')
-    plt.plot(xcanaux, hotwall_temp_list, color='red', label='Twg')
+    plt.plot(xcanaux, coldwall_temp_list, color='blue', label='Cold side')
+    plt.plot(xcanaux, hotwall_temp_list, color='red', label='Hot side')
     plt.title('Wall temperature (in K) as a function of engine axis')
-    plt.legend(loc='lower left')
+    plt.legend(loc='upper left')
     plt.show()
 
     tempcoolant_list.pop()
@@ -449,8 +444,10 @@ if plot_detail >= 1:
     plt.show()
 
     plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, flux_list, color='red')
+    plt.plot(xcanaux, flux_list, color='red', label="Actual heat flux")
     plt.title('Heat flux (in W) as a function of engine axis')
+    plt.plot(xcanaux, critical_heat_flux_list, color="k", label="CHF")
+    plt.legend(loc='upper left')
     plt.show()
 
     mach_03 = [x * 0.3 for x in sound_speed_coolant_list]
@@ -483,7 +480,7 @@ if plot_detail >= 2:
     plt.plot(xcanaux, densitycoolant_list, color='blue')
     plt.title('Volumic mass of the coolant as a function of engine axis')
     plt.show()
-    
+
     plt.figure(dpi=figure_dpi)
     plt.plot(xcanaux, q_list_CO2, color='r', label='CO2')
     plt.plot(xcanaux, q_list_H2O, color='b', label='H2O')
