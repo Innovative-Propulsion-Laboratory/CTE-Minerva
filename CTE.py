@@ -630,7 +630,7 @@ if do_final_3d_plot:
             progressbar.update(1)
 
     # Stack all these slices in a final 3D plot
-    carto3d([0, 0, 0], xcanaux, ycanaux, temperature_slice_list, plt.cm.Spectral_r,
+    carto3d([0, 0, 0], xcanaux, ycanaux, temperature_slice_list, plt.cm.coolwarm,
             '3D view of wall temperatures (in K)', nbc, limitation)
     print("█                                                                          █")
     # End of the 3D display timer

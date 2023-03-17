@@ -121,7 +121,7 @@ def compute_chf(P_SI, T_SI, V_SI, rho_SI, Re):
 
     # Mass flux
     G_SI = rho_SI * V_SI
-    G_IMP = (1 / 703.07) * G_SI
+    G_IMP = (1 / 703.07) * G_SI  # lbm/in².s
 
     # Latent heat of vaporisation
     # (http://www.coolprop.org/coolprop/HighLevelAPI.html#vapor-liquid-and-saturation-states)

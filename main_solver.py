@@ -99,7 +99,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
             length_from_inlet += dl
 
             # Reuse the value at previous point for a more accurate first guess (and faster convergence)
-            wall_cond = 350 if i == 0 else wall_cond_list[i - 1]
+            wall_cond = 15 if i == 0 else wall_cond_list[i - 1]
             sigma = 1 if i == 0 else sigma_list[i - 1]
 
             # Arbitrarely create a difference to enter the loop
