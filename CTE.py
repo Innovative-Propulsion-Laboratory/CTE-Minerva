@@ -45,7 +45,7 @@ input_CEA_data = "input/Minerva_project.txt"  # Minerva's parameters (found with
 size2 = 16  # Used for the height of the display in 3D view
 limitation = 0.05  # used to build the scales in 3D view
 figure_dpi = 150  # Dots Per Inch (DPI) for all figures (lower=faster)
-plot_detail = 3  # 0=No plots; 1=Important plots; 3=All plots
+plot_detail = 0  # 0=No plots; 1=Important plots; 3=All plots
 show_3d_plots = False
 show_2D_temperature = False
 do_final_3d_plot = False
@@ -219,8 +219,8 @@ Molfrac_H2O = np.interp(x_coord_list, x_Molfrac, [xH2O_c_input, xH2O_t_input, xH
 # Value of the molar fraction of the CO2 after interpolation
 Molfrac_CO2 = np.interp(x_coord_list, x_Molfrac, [xCO2_c_input, xCO2_t_input, xCO2_e_input])
 
-PH2O_list = [pressure_list[i] * Molfrac_H2O[i] for i in range(0, nb_points)]  # Partial pressure of the H2O
-PCO2_list = [pressure_list[i] * Molfrac_CO2[i] for i in range(0, nb_points)]  # Partial pressure of the CO2
+partial_p_H2O_list = [pressure_list[i] * Molfrac_H2O[i] for i in range(0, nb_points)]  # Partial pressure of the H2O
+partial_p_CO2_list = [pressure_list[i] * Molfrac_CO2[i] for i in range(0, nb_points)]  # Partial pressure of the CO2
 
 # Plots of molar fraction and partial pressure
 if plot_detail >= 3:
@@ -232,8 +232,8 @@ if plot_detail >= 3:
     plt.show()
 
     plt.figure(dpi=figure_dpi)
-    plt.plot(x_coord_list, PH2O_list, color='blue', label='H2O')
-    plt.plot(x_coord_list, PCO2_list, color='orange', label='CO2')
+    plt.plot(x_coord_list, partial_p_H2O_list, color='blue', label='H2O')
+    plt.plot(x_coord_list, partial_p_CO2_list, color='orange', label='CO2')
     plt.title("Partial static pressure (in Pa) of as a function of the engine axis")
     plt.legend(loc='center left')
     plt.show()
@@ -249,6 +249,7 @@ with tqdm(total=nb_points - 1,
         hotgas_temp_list.append(temperature)
         progressbar.update(1)
 
+hot_gas_temp_list_saved = hotgas_temp_list.copy()
 # List of corrected gas temperatures (max diff with original is about 75 K)
 hotgas_temp_list = [t.tempcorrige(hotgas_temp_list[i], gamma_list[i], mach_list[i]) for i in
                     range(0, nb_points)]
@@ -364,31 +365,30 @@ y_coord_avec_canaux.reverse()
 # We reverse the lists in order to calculate from the manifold to the injection
 
 # Save the data for exporting, before altering the original lists
-hotgas_temperature_saved = hotgas_temp_list[:]
 aire_saved = cross_section_area_list[:]
 mach_list_saved = mach_list[:]
 gamma_saved = gamma_list[:]
-PH2O_list_saved = PH2O_list[:]
-PCO2_list_saved = PCO2_list[:]
+PH2O_list_saved = partial_p_H2O_list[:]
+PCO2_list_saved = partial_p_CO2_list[:]
 
 # Remove the data points before the manifold
 hotgas_temp_list = hotgas_temp_list[:nb_points_channel]
 cross_section_area_list = cross_section_area_list[:nb_points_channel]
 mach_list = mach_list[:nb_points_channel]
 gamma_list = gamma_list[:nb_points_channel]
-PH2O_list = PH2O_list[:nb_points_channel]
-PCO2_list = PCO2_list[:nb_points_channel]
+partial_p_H2O_list = partial_p_H2O_list[:nb_points_channel]
+partial_p_CO2_list = partial_p_CO2_list[:nb_points_channel]
 
 gamma_list.reverse()
 mach_list.reverse()
 cross_section_area_list.reverse()
 hotgas_temp_list.reverse()
-PH2O_list.reverse()
-PCO2_list.reverse()
+partial_p_H2O_list.reverse()
+partial_p_CO2_list.reverse()
 
 # %% Main computation
 
-data_hotgas = (hotgas_temp_list, molar_mass, gamma_list, Pc, c_star, PH2O_list, PCO2_list)
+data_hotgas = (hotgas_temp_list, molar_mass, gamma_list, Pc, c_star, partial_p_H2O_list, partial_p_CO2_list)
 data_coolant = (Temp_cool_init, Pressure_cool_init, fluid, debit_mass_coolant)
 data_channel = (xcanaux, ycanaux, larg_canal, larg_ailette_list, ht_canal,
                 wall_thickness, area_channel, nb_points_channel)
@@ -397,11 +397,11 @@ data_chamber = (y_coord_avec_canaux, nbc, diam_throat, curv_radius_pre_throat, a
 
 # Call the main solving loop
 hlcor_list, hlcor_list_2, hotgas_visc_list, hotgas_cp_list, hotgas_cond_list, \
-hotgas_prandtl_list, hg_list, hotwall_temp_list, coldwall_temp_list, flux_list, \
-sigma_list, coolant_reynolds_list, tempcoolant_list, visccoolant_list, \
-condcoolant_list, cpcoolant_list, densitycoolant_list, velocitycoolant_list, \
-pcoolant_list, wallcond_list, sound_speed_coolant_list, hlnormal_list, \
-qRad_list, q_list_CO2, q_list_H2O, critical_heat_flux_list \
+hotgas_prandtl_list, hg_list, hotwall_temp_list, coldwall_temp_list, total_flux_list, \
+sigma_list, coolant_reynolds_list, coolant_temp_list, coolant_viscosity_list, \
+coolant_cond_list, coolant_cp_list, coolant_density_list, coolant_velocity_list, \
+coolant_pressure_list, coolant_prandtl_list, wallcond_list, sound_speed_coolant_list, hlnormal_list, \
+rad_flux_list, rad_CO2_list, rad_H2O_list, critical_heat_flux_list, Nu_list, Nu_corr_list, Dhy_list \
     = mainsolver(data_hotgas, data_coolant, data_channel, data_chamber)
 
 end_m = time.perf_counter()  # End of the main solution timer
@@ -437,14 +437,14 @@ if plot_detail >= 1:
     plt.legend(loc='upper left')
     plt.show()
 
-    tempcoolant_list.pop()
+    coolant_temp_list.pop()
     plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, tempcoolant_list, color='blue')
+    plt.plot(xcanaux, coolant_temp_list, color='blue')
     plt.title('Coolant temperature (in K) as a function of engine axis')
     plt.show()
 
     plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, flux_list, color='red', label="Actual heat flux")
+    plt.plot(xcanaux, total_flux_list, color='red', label="Actual heat flux")
     plt.title('Heat flux (in W) as a function of engine axis')
     plt.plot(xcanaux, critical_heat_flux_list, color="k", label="CHF")
     plt.legend(loc='upper left')
@@ -452,15 +452,15 @@ if plot_detail >= 1:
 
     mach_03 = [x * 0.3 for x in sound_speed_coolant_list]
     plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, velocitycoolant_list, color='blue', label='Coolant')
+    plt.plot(xcanaux, coolant_velocity_list, color='blue', label='Coolant')
     plt.plot(xcanaux, mach_03, color='orange', label='Mach 0.3 limit')
     plt.title('Velocity (in m/s) of the coolant as a function of engine axis')
     plt.legend(loc='upper left')
     plt.show()
 
-    pcoolant_list.pop()
+    coolant_pressure_list.pop()
     plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, pcoolant_list, color='orange')
+    plt.plot(xcanaux, coolant_pressure_list, color='orange')
     plt.title('Pressure drop in the cooling channels')
     plt.show()
 
@@ -476,15 +476,15 @@ if plot_detail >= 2:
     plt.show()
 
     plt.figure(dpi=figure_dpi)
-    densitycoolant_list.pop()
-    plt.plot(xcanaux, densitycoolant_list, color='blue')
+    coolant_density_list.pop()
+    plt.plot(xcanaux, coolant_density_list, color='blue')
     plt.title('Volumic mass of the coolant as a function of engine axis')
     plt.show()
 
     plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, q_list_CO2, color='r', label='CO2')
-    plt.plot(xcanaux, q_list_H2O, color='b', label='H2O')
-    plt.plot(xcanaux, qRad_list, color='g', label='total')
+    plt.plot(xcanaux, rad_CO2_list, color='r', label='CO2')
+    plt.plot(xcanaux, rad_H2O_list, color='b', label='H2O')
+    plt.plot(xcanaux, rad_flux_list, color='g', label='total')
     plt.title('Radiative heat flux(W/m2)')
     plt.legend()
     plt.show()
@@ -520,21 +520,21 @@ if plot_detail >= 3:
     plt.title("Sigma as a function of the engine axis")
     plt.show()
 
-    condcoolant_list.pop()
+    coolant_cond_list.pop()
     plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, condcoolant_list, color='blue')
+    plt.plot(xcanaux, coolant_cond_list, color='blue')
     plt.title('Conductivity of the coolant as a function of engine axis')
     plt.show()
 
-    cpcoolant_list.pop()
+    coolant_cp_list.pop()
     plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, cpcoolant_list, color='blue')
+    plt.plot(xcanaux, coolant_cp_list, color='blue')
     plt.title('Cp of the coolant as a function of engine axis')
     plt.show()
 
-    visccoolant_list.pop()
+    coolant_viscosity_list.pop()
     plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, visccoolant_list, color='blue')
+    plt.plot(xcanaux, coolant_viscosity_list, color='blue')
     plt.title('Viscosity of the coolant as a function of engine axis')
     plt.show()
 
@@ -546,11 +546,11 @@ if plot_detail >= 3:
 if plot_detail >= 1 and show_3d_plots:
     colormap = plt.cm.plasma
     inv = 0, 0, 0
-    view3d(inv, xcanaux, ycanaux, flux_list, colormap, "Heat flux (in MW/m²)", size2, limitation)
+    view3d(inv, xcanaux, ycanaux, total_flux_list, colormap, "Heat flux (in MW/m²)", size2, limitation)
 
     colormap = plt.cm.coolwarm
     inv = 0, 0, 0
-    view3d(inv, xcanaux, ycanaux, tempcoolant_list, colormap, "Temperature of the coolant (in K)", size2, limitation)
+    view3d(inv, xcanaux, ycanaux, coolant_temp_list, colormap, "Temperature of the coolant (in K)", size2, limitation)
 
 if plot_detail >= 2 and show_3d_plots:
     colormap = plt.cm.magma
@@ -581,7 +581,7 @@ if show_2D_temperature:
     dx = 0.00004  # *3.5
     location = " at the beginning of the chamber"
     carto2D(larg_ailette_list[-1] + larg_canal[-1], larg_canal[-1], e_conv, ht_canal[-1], dx, hg_list[-1],
-            wallcond_list[-1], hotgas_temp_list[-1], hlcor_list[-1], tempcoolant_list[-1], 5, True, 1, location, False)
+            wallcond_list[-1], hotgas_temp_list[-1], hlcor_list[-1], coolant_temp_list[-1], 5, True, 1, location, False)
 
     # At the throat
     print("█ Results at the throat :                                                  █")
@@ -590,13 +590,13 @@ if show_2D_temperature:
     location = " at the throat"
     carto2D(larg_ailette_list[pos_col] + larg_canal[pos_col], larg_canal[pos_col], e_col, ht_canal[pos_col],
             dx, hg_list[pos_col], wallcond_list[pos_col], hotgas_temp_list[pos_col], hlcor_list[pos_col],
-            tempcoolant_list[pos_col], 15, True, 2, location, False)
+            coolant_temp_list[pos_col], 15, True, 2, location, False)
     # At the end of the divergent
     print("█ Results at the manifold :                                                █")
     dx = 0.00004
     location = " at the manifold"
     carto2D(larg_ailette_list[0] + larg_canal[0], larg_canal[0], e_tore, ht_canal[0], dx, hg_list[0],
-            wallcond_list[0], hotgas_temp_list[0], hlcor_list[0], tempcoolant_list[0], 5, True, 1, location, False)
+            wallcond_list[0], hotgas_temp_list[0], hlcor_list[0], coolant_temp_list[0], 5, True, 1, location, False)
 
     end_d2 = time.perf_counter()  # End of the display of 2D timer
     time_elapsed = f"{round(end_d2 - start_d2, 2)}"  # 2D display elapsed time (in s)
@@ -625,7 +625,7 @@ if do_final_3d_plot:
         for i in range(0, nb_points_channel):
             temperature_slice = carto2D(larg_ailette_list[i] + larg_canal[i], larg_canal[i], wall_thickness[i],
                                         ht_canal[i], dx, hg_list[i], wallcond_list[i], hotgas_temp_list[i],
-                                        hlnormal_list[i], tempcoolant_list[i], 3, False, 1, "", True)
+                                        hlnormal_list[i], coolant_temp_list[i], 3, False, 1, "", True)
             temperature_slice_list.append(temperature_slice)
             progressbar.update(1)
 
@@ -665,19 +665,30 @@ hotgas_prandtl_list.reverse()
 sigma_list.reverse()
 coldwall_temp_list.reverse()
 hotwall_temp_list.reverse()
-flux_list.reverse()
-tempcoolant_list.reverse()
-velocitycoolant_list.reverse()
+total_flux_list.reverse()
+coolant_temp_list.reverse()
+coolant_velocity_list.reverse()
 coolant_reynolds_list.reverse()
 hlnormal_list.reverse()
-densitycoolant_list.reverse()
-visccoolant_list.reverse()
-condcoolant_list.reverse()
-cpcoolant_list.reverse()
-pcoolant_list.reverse()
-PH2O_list.reverse()
-PCO2_list.reverse()
+hlcor_list.reverse()
+hlcor_list_2.reverse()
+coolant_density_list.reverse()
+coolant_viscosity_list.reverse()
+coolant_cond_list.reverse()
+coolant_cp_list.reverse()
+coolant_prandtl_list.reverse()
+coolant_pressure_list.reverse()
+partial_p_H2O_list.reverse()
+partial_p_CO2_list.reverse()
 y_coord_avec_canaux.reverse()
+Nu_list.reverse()
+Nu_corr_list.reverse()
+Dhy_list.reverse()
+wallcond_list.reverse()
+rad_CO2_list.reverse()
+rad_H2O_list.reverse()
+rad_flux_list.reverse()
+critical_heat_flux_list.reverse()
 
 # %% Preparation of the lists for CAD modelisation
 "Changing the coordinates of the height of the channels (otherwise it is geometrically wrong)"
@@ -735,14 +746,55 @@ if write_in_csv:
     geometry1_writer = csv.writer(geometry1)
     geometry2_writer = csv.writer(geometry2)
     valuexport_writer.writerow(
-        ("Engine x axix", "Engine diameter", "Area of gas engine", "Gas gamma",
-         "Mach number", "Gas pressure", "Total pressure", "Gas temperature",
-         "Channels x axis", "Engine + chamber wall diameter", "Channels width",
-         "Channels height", "Channels area", "Gas viscosity", "Cp gas",
-         "Gas conductivity", "Prandtl gaz", "Coeff Hg", "Sigma", " Twg ", " Twl ",
-         "Heat flux", "Tl", "Reynolds CH4", "Coeff Hl", "Rho coolant",
-         "Viscosity CH4", "Conductivity CH4", "Cp CH4", "Coolant velocity",
-         "Coolant pressure", "Wall conductivity", "x real height", "y real height"))
+        ("x [mm]",
+         "y [mm]",
+         "Cross sectionnal area [m²]",
+         "Gas gamma [-]",
+         "Mach number [-]",
+         "Gas pressure [bar]",
+         "Channel x [mm]",
+         "Channel y [mm]",
+         "Channel width [mm]",
+         "Channel height [mm]",
+         "Channel area [m²]",
+         "Hydraulic diameter [m]",
+
+         "Gas viscosity [µPa.s]",
+         "Gas cp [J/kg.K]",
+         "Gas conductivity [W/m.K]",
+         "Gas Prandtl [-]",
+         "Gas temperature [K]",
+         "Adiabatic wall (recovery) gas temperature [K]",
+
+         "hg [W/m².K]",
+         "Sigma (Bartz) [-]",
+         "hl [W/m².K]",
+         "hl corrigé (Julien) [W/m².K]",
+         "hl corrigé (L. Denies) [W/m².K]",
+         "Cold side wall temperature [K]",
+         "Hot side wall temperature [K]",
+         "CO2 radiative heat flux [MW/m²]",
+         "H2O radiative heat flux [MW/m²]",
+         "Total radiative heat flux [MW/m²]",
+         "Heat flux [MW/m²]",
+         "Critical Heat Flux [MW/m²]",
+
+         "Coolant temperature [K]",
+         "Coolant Reynolds [-]",
+         "Coolant density [kg/m^3]",
+         "Coolant viscosity [µPa.s]",
+         "Coolant conductivity [W/m.K]",
+         "Coolant cp [J/kg.K]",
+         "Coolant velocity [m/s]",
+         "Coolant pressure [bar]",
+         "Coolant Prandtl [-]",
+         "Nusselt number [-]",
+         "Corrected Nusselt (roughness) [-]",
+
+         "Wall conductivity [W/m.K]",
+         "x real height [mm]",
+         "y real height [mm]"))
+
     geometry1_writer.writerow(("x real height", "y real height"))
     geometry2_writer.writerow(("Engine + chamber wall radius", "x real height"))
 
@@ -750,23 +802,59 @@ if write_in_csv:
         if i < nb_points_channel:
             geometry1_writer.writerow((newxhtre[i] * (-1000), newyhtre[i] * 1000))
             geometry2_writer.writerow((ycanaux[i] * 1000, newxhtre[i] * (-1000)))
-            valuexport_writer.writerow((x_coord_list[i], y_coord_list[i], aire_saved[i], gamma_saved[i],
-                                        mach_list_saved[i], pressure_list[i],
-                                        hotgas_temperature_saved[i], xcanaux[i], ycanaux[i],
-                                        larg_canal[i], ht_canal[i], area_channel[i], hotgas_visc_list[i],
-                                        hotgas_cp_list[i], hotgas_cond_list[i], hotgas_prandtl_list[i],
-                                        hg_list[i], sigma_list[i], coldwall_temp_list[i],
-                                        hotwall_temp_list[i], flux_list[i], tempcoolant_list[i],
-                                        coolant_reynolds_list[i], hlnormal_list[i], densitycoolant_list[i],
-                                        visccoolant_list[i],
-                                        condcoolant_list[i], cpcoolant_list[i], velocitycoolant_list[i],
-                                        pcoolant_list[i],
-                                        wallcond_list[i], newxhtre[i], newyhtre[i]))
+            valuexport_writer.writerow((x_coord_list[i] * 1000,
+                                        y_coord_list[i] * 1000,
+                                        aire_saved[i],
+                                        gamma_saved[i],
+                                        mach_list_saved[i],
+                                        pressure_list[i] * 1e-5,
+                                        xcanaux[i] * 1000,
+                                        ycanaux[i] * 1000,
+                                        larg_canal[i] * 1000,
+                                        ht_canal[i] * 1000,
+                                        area_channel[i],
+                                        Dhy_list[i] * 1000,
+
+                                        hotgas_visc_list[i] * 1e6,
+                                        hotgas_cp_list[i],
+                                        hotgas_cond_list[i],
+                                        hotgas_prandtl_list[i],
+                                        hot_gas_temp_list_saved[i],
+                                        hotgas_temp_list[i],
+
+                                        hg_list[i],
+                                        sigma_list[i],
+                                        hlnormal_list[i],
+                                        hlcor_list[i],
+                                        hlcor_list_2[i],
+                                        coldwall_temp_list[i],
+                                        hotwall_temp_list[i],
+                                        rad_CO2_list[i] * 1e-6,
+                                        rad_H2O_list[i] * 1e-6,
+                                        rad_flux_list[i] * 1e-6,
+                                        total_flux_list[i] * 1e-6,
+                                        critical_heat_flux_list[i] * 1e-6,
+
+                                        coolant_temp_list[i],
+                                        coolant_reynolds_list[i],
+                                        coolant_density_list[i],
+                                        coolant_viscosity_list[i] * 1e6,
+                                        coolant_cond_list[i],
+                                        coolant_cp_list[i],
+                                        coolant_velocity_list[i],
+                                        coolant_pressure_list[i] * 1e-5,
+                                        coolant_prandtl_list[i],
+                                        Nu_list[i],
+                                        Nu_corr_list[i],
+
+                                        wallcond_list[i],
+                                        newxhtre[i] * 1000,
+                                        newyhtre[i] * 1000))
         else:
             valuexport_writer.writerow(
                 (x_coord_list[i], y_coord_list[i], aire_saved[i], gamma_saved[i],
                  mach_list_saved[i], pressure_list[i],
-                 hotgas_temperature_saved[i], ' ', ' ', ' ', ' ', ' ', ' ',
+                 ' ', ' ', ' ', ' ', ' ', ' ',
                  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
                  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '))
 

@@ -43,14 +43,19 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
     hl_normal_list = []
     hl_corrected_list = []
     hl_corrected_list_2 = []
-    q_list_H2O = []
-    q_list_CO2 = []
-    qRad_list = []
+    rad_H2O_list = []
+    rad_CO2_list = []
+    rad_flux_list = []
     critical_heat_flux_list = []
+    Nu_list = []
+    Nu_corr_list = []
+    Dhy_list = []
+    coolant_prandtl_list = []
+
     index_throat = y_coord_avec_canaux.index(min(y_coord_avec_canaux))
 
-    # This is to avoid oscillations near the inlet because of division by zero
-    length_from_inlet = 0.03
+    # This is only relevant for the Taylor correlation for CH4 (leave it at 0)
+    length_from_inlet = 0.00
 
     # Initial guess for the wall temperature
     coldwall_temp = 300
@@ -203,26 +208,34 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
             hotgas_cp_list.append(hotgas_cp)
             hotgas_cond_list.append(hotgas_cond)
             hotgas_prandtl_list.append(hotgas_prandtl)
+
             hg_list.append(hg)
+            sigma_list.append(sigma)
             hl_normal_list.append(hl)
             hl_corrected_list.append(hl_cor)
             hl_corrected_list_2.append(hl_cor2)
+
             hotwall_temp_list.append(hotwall_temp)
             coldwall_temp_list.append(coldwall_temp)
             flux_list.append(flux)
-            sigma_list.append(sigma)
+            critical_heat_flux_list.append(critical_heat_flux)
+            rad_flux_list.append(qRad)
+            rad_CO2_list.append(qC)
+            rad_H2O_list.append(qW)
             wall_cond_list.append(wall_cond)
+
             coolant_pressure_list.append(new_coolant_pressure)
             coolant_temp_list.append(new_coolant_temp)
             coolant_viscosity_list.append(new_cool_visc)
             coolant_cond_list.append(new_cool_cond)
             coolant_cp_list.append(new_cool_cp)
             coolant_density_list.append(new_cool_dens)
+            coolant_prandtl_list.append(Pr_cool)
             sound_speed_list.append(new_cool_sound_spd)
-            qRad_list.append(qRad)
-            q_list_CO2.append(qC)
-            q_list_H2O.append(qW)
-            critical_heat_flux_list.append(critical_heat_flux)
+            Nu_list.append(Nu)
+            Nu_corr_list.append(Nu * roughness_correction)
+            Dhy_list.append(Dhy)
+
             pbar_main.update(1)
 
         return hl_corrected_list, hl_corrected_list_2, hotgas_viscosity_list, \
@@ -230,6 +243,6 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
                hotwall_temp_list, coldwall_temp_list, flux_list, sigma_list, \
                coolant_reynolds_list, coolant_temp_list, coolant_viscosity_list, \
                coolant_cond_list, coolant_cp_list, coolant_density_list, \
-               coolant_velocity_list, coolant_pressure_list, wall_cond_list, \
-               sound_speed_list, hl_normal_list, qRad_list, q_list_CO2, \
-               q_list_H2O, critical_heat_flux_list
+               coolant_velocity_list, coolant_pressure_list, coolant_prandtl_list, wall_cond_list, \
+               sound_speed_list, hl_normal_list, rad_flux_list, rad_CO2_list, \
+               rad_H2O_list, critical_heat_flux_list, Nu_list, Nu_corr_list, Dhy_list
