@@ -47,9 +47,9 @@ size2 = 16  # Used for the height of the display in 3D view
 limitation = 0.05  # used to build the scales in 3D view
 figure_dpi = 300  # Dots Per Inch (DPI) for all figures (lower=faster)
 plot_detail = 3  # 0=No plots; 1=Important plots; 3=All plots
-show_plots = False
-save_plots = True
-show_3d_plots = True
+show_plots = True
+save_plots = False
+show_3d_plots = False
 show_2D_temperature = False
 do_final_3d_plot = False
 write_in_csv = True
@@ -182,7 +182,7 @@ with tqdm(total=nb_points - 1,
 
 hot_gas_temp_list_saved = hotgas_temp_list.copy()
 # List of corrected gas temperatures (max diff with original is about 75 K)
-hotgas_temp_list = [t.tempcorrige(hotgas_temp_list[i], gamma_list[i], mach_list[i]) for i in
+hotgas_temp_list = [t.tempcorrige_pempie(hotgas_temp_list[i], gamma_list[i], mach_list[i]) for i in
                     range(0, nb_points)]
 
 # %% Dimensions

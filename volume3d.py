@@ -84,7 +84,7 @@ def view3d(inv, x, y, mesure, col, title, size2, limitation, show=True):
     if inv[2] == 1:
         mesure.reverse()
 
-    fig = plt.figure(figsize=(10, size2), dpi=200)  # figsize=(float, float) : width, height in inches
+    fig = plt.figure(figsize=(10, size2), dpi=150)  # figsize=(float, float) : width, height in inches
     ax = fig.add_subplot(111, projection='3d')
     xu = []  # List of x position of points (vertical)
     yu = []  # List of y position of points

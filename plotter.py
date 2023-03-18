@@ -107,7 +107,7 @@ def plotter(parameters, data):
     # Plots of the temperature in the engine (2D/3D)
     if plot_detail >= 2:
         figs.append(t.n_plots(x_coord_list_mm,
-                              y_list=[hotgas_temp_list, hot_gas_temp_list_saved],
+                              y_list=[hot_gas_temp_list_saved, hotgas_temp_list],
                               y_label_list=[r'Real gas temperature $T_g$',
                                             r'Recovery temperature $T_{aw}$'],
                               colors_list=['r', 'b'],
