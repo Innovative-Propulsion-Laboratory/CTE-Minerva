@@ -20,9 +20,10 @@ from CoolProp.CoolProp import PropsSI
 
 # Graphics
 from heatequationsolve import carto2D
-from volume3d import carto3d, view3d
+from volume3d import carto3d
 import matplotlib.pyplot as plt
 from tqdm import tqdm  # For progress bars
+from plotter import plotter
 
 start_time = time.perf_counter()  # Beginning of the timer
 
@@ -44,9 +45,11 @@ input_CEA_data = "input/Minerva_project.txt"  # Minerva's parameters (found with
 # Constant input_data_list
 size2 = 16  # Used for the height of the display in 3D view
 limitation = 0.05  # used to build the scales in 3D view
-figure_dpi = 150  # Dots Per Inch (DPI) for all figures (lower=faster)
-plot_detail = 0  # 0=No plots; 1=Important plots; 3=All plots
-show_3d_plots = False
+figure_dpi = 300  # Dots Per Inch (DPI) for all figures (lower=faster)
+plot_detail = 3  # 0=No plots; 1=Important plots; 3=All plots
+show_plots = False
+save_plots = True
+show_3d_plots = True
 show_2D_temperature = False
 do_final_3d_plot = False
 write_in_csv = True
@@ -90,31 +93,10 @@ x_coord_list = [float(row[0]) / 1000 for row in x_coords_reader]
 y_coord_list = [float(row[0]) / 1000 for row in y_coords_reader]
 nb_points = len(x_coord_list)  # Number of points (or the index of the end of the divergent)
 
-# Plot of the profile of the engine
-if plot_detail >= 3:
-    plt.figure(dpi=figure_dpi)
-    plt.plot(x_coord_list, y_coord_list, color='black')
-    plt.title('Profile of the Minerva (left : chamber and right : divergent)', color='black')
-    plt.show()
-
-# Computation and plot of the mesh density of the engine
-if plot_detail >= 3 and show_3d_plots:
-    dist_between_pts = [abs(x_coord_list[i] - x_coord_list[i + 1]) for i in range(0, len(x_coord_list) - 1)]
-    dist_between_pts.append(dist_between_pts[-1])
-    colormap = plt.cm.binary
-    inv = 1, 1, 1  # 1 means should be reversed
-    view3d(inv, x_coord_list, y_coord_list, dist_between_pts, colormap, 'Mesh density (in m)', size2, limitation)
-
+x_coord_list_mm = [x * 1000 for x in x_coord_list]
+y_coord_list_mm = [y * 1000 for y in y_coord_list]
 # %% Computation of the cross-sectional area along the engine
 cross_section_area_list = [np.pi * r ** 2 for r in y_coord_list]
-
-# Plots of the cross-sectionnal areas
-if plot_detail >= 3:
-    plt.figure(dpi=figure_dpi)
-    plt.plot(x_coord_list, cross_section_area_list, color='black')
-    plt.title("Cross section area of engine (in m²) as a function of engine axis")
-    plt.show()
-
 # %% Adiabatic constant (gamma) parametrization
 print("█ Computing gamma                                                          █")
 
@@ -146,13 +128,6 @@ for q in range(-1, nb_points - i_throat - 1):  # Linear interpolation between be
         x_coord_list[i_throat + 1 + q] - x_coord_list[i_throat + q])
     gamma_list.append(gamma_divergent)
 
-# Plot of the gamma linearisation
-if plot_detail >= 3:
-    plt.figure(dpi=figure_dpi)
-    plt.plot(x_coord_list, gamma_list, color='gold')
-    plt.title("Gamma of hot gases as a function of engine axis")
-    plt.show()
-
 # %% Mach number computation
 "Computation of gases mach number of the hot gases (and their initial velocity)"
 
@@ -161,7 +136,6 @@ mach_init_gas = v_init_gas / sound_speed_init  # Initial mach number
 mach_gas = mach_init_gas
 mach_list = [mach_init_gas]
 
-# Mach number computations along the engine
 with tqdm(total=nb_points - 1,
           desc="█ Computing mach number        ",
           unit="|   █", bar_format="{l_bar}{bar}{unit}",
@@ -171,19 +145,6 @@ with tqdm(total=nb_points - 1,
                                mach_gas, gamma_list[i])
         mach_list.append(mach_gas)
         progressbar.update(1)
-
-# Plots of the Mach number in the engine (2D/3D)
-if plot_detail >= 1:
-    plt.figure(dpi=figure_dpi)
-    plt.plot(x_coord_list, mach_list, color='gold')
-    plt.title("Mach number as a function of the engine axis")
-    plt.show()
-
-if plot_detail >= 1 and show_3d_plots:
-    colormap = plt.cm.Spectral
-    inv = 1, 1, 1  # 1 means should be reversed
-    print("█ Plotting 3D graph                                                        █")
-    view3d(inv, x_coord_list, y_coord_list, mach_list, colormap, 'Mach number of hot gases', size2, limitation)
 
 # %% Static pressure computation
 pressure_list = [Pc]  # (in Pa)
@@ -196,20 +157,6 @@ with tqdm(total=nb_points - 1,
         pressure = t.pressure_solv(mach_list[i], mach_list[i + 1], pressure_list[i], gamma_list[i])
         pressure_list.append(pressure)
         progressbar.update(1)
-
-# Plot of the static pressure (2D/3D)
-if plot_detail >= 2:
-    plt.figure(dpi=figure_dpi)
-    plt.plot(x_coord_list, pressure_list, color='gold')
-    plt.title("Global static pressure (in Pa) as a function of the engine axis")
-    plt.show()
-
-if plot_detail >= 2 and show_3d_plots:
-    colormap = plt.cm.gist_rainbow_r
-    inv = 1, 1, 1  # 1 means should be reversed
-    print("█ Plotting 3D graph                                                        █")
-    view3d(inv, x_coord_list, y_coord_list, pressure_list, colormap, 'Static pressure (in Pa)', size2, limitation)
-
 # %% Partial pressure computation and interpolation of the molar fraction
 x_Molfrac = [x_coord_list[0], x_coord_list[i_throat], x_coord_list[-1]]  # Location associated to the molar mass
 
@@ -221,22 +168,6 @@ Molfrac_CO2 = np.interp(x_coord_list, x_Molfrac, [xCO2_c_input, xCO2_t_input, xC
 
 partial_p_H2O_list = [pressure_list[i] * Molfrac_H2O[i] for i in range(0, nb_points)]  # Partial pressure of the H2O
 partial_p_CO2_list = [pressure_list[i] * Molfrac_CO2[i] for i in range(0, nb_points)]  # Partial pressure of the CO2
-
-# Plots of molar fraction and partial pressure
-if plot_detail >= 3:
-    plt.figure(dpi=figure_dpi)
-    plt.plot(x_coord_list, Molfrac_H2O, color='blue', label='H2O')
-    plt.plot(x_coord_list, Molfrac_CO2, color='orange', label='CO2')
-    plt.title("Molar fraction of as a function of the engine axis")
-    plt.legend(loc='center left')
-    plt.show()
-
-    plt.figure(dpi=figure_dpi)
-    plt.plot(x_coord_list, partial_p_H2O_list, color='blue', label='H2O')
-    plt.plot(x_coord_list, partial_p_CO2_list, color='orange', label='CO2')
-    plt.title("Partial static pressure (in Pa) of as a function of the engine axis")
-    plt.legend(loc='center left')
-    plt.show()
 
 # %% Hot gas temperature computation
 hotgas_temp_list = [Tc]
@@ -253,20 +184,6 @@ hot_gas_temp_list_saved = hotgas_temp_list.copy()
 # List of corrected gas temperatures (max diff with original is about 75 K)
 hotgas_temp_list = [t.tempcorrige(hotgas_temp_list[i], gamma_list[i], mach_list[i]) for i in
                     range(0, nb_points)]
-
-# Plots of the temperature in the engine (2D/3D)
-if plot_detail >= 2:
-    plt.figure(dpi=figure_dpi)
-    plt.plot(x_coord_list, hotgas_temp_list, color='gold')
-    plt.title("Gas temperature (in K) as a function of the engine axis")
-    plt.show()
-
-if plot_detail >= 2 and show_3d_plots:
-    colormap = plt.cm.coolwarm
-    inv = 1, 1, 1  # 1 means should be reversed
-    print("█ Plotting 3D graph                                                        █")
-    view3d(inv, x_coord_list, y_coord_list, hotgas_temp_list, colormap, 'Temperature of the gases (in K)', size2,
-           limitation)
 
 # %% Dimensions
 print("█ Computing channel geometric                                              █")
@@ -326,10 +243,10 @@ thicknesses = (e_conv, e_col, e_tore)
 coeffs = (n1, n2, n3, n4, n5, n6)
 
 # Compute dimensions
-xcanaux, ycanaux, larg_canal, larg_ailette_list, ht_canal, wall_thickness, area_channel, nb_points_channel, \
-y_coord_avec_canaux \
-    = canaux(profile, widths, heights, thicknesses, coeffs, manifold_pos, debit_volumique_total_cool, nbc, plot_detail,
-             write_in_csv, figure_dpi)
+xcanaux, ycanaux, larg_canal, larg_ailette_list, ht_canal, wall_thickness, \
+area_channel, nb_points_channel, y_coord_avec_canaux \
+    = canaux(profile, widths, heights, thicknesses, coeffs, manifold_pos,
+             debit_volumique_total_cool, nbc, plot_detail, write_in_csv, figure_dpi)
 
 # Write the dimensions of the channels in a CSV file
 file_name = "output/channelvalue.csv"
@@ -414,161 +331,6 @@ elif len(time_elapsed) == 5:
     time_elapsed_m = f" {time_elapsed} s"
 else:
     time_elapsed_m = f"{time_elapsed} s"
-
-# %% Display of the 1D analysis results
-print("█                                                                          █")
-
-if plot_detail >= 1:
-    start_d1 = time.perf_counter()  # Start of the display of 1D timer
-    print("█ Display of results                                                       █")
-    print("█                                                                          █")
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, hlcor_list_2, color='blue', label='Hl corrected (Luka Denies)')
-    plt.plot(xcanaux, hlcor_list, color='green', label='Hl corrected')
-    plt.plot(xcanaux, hlnormal_list, color='cyan', label='Hl')
-    plt.title("Convection coeff as a function of the engine axis")
-    plt.legend(loc='upper left')
-    plt.show()
-
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, coldwall_temp_list, color='blue', label='Cold side')
-    plt.plot(xcanaux, hotwall_temp_list, color='red', label='Hot side')
-    plt.title('Wall temperature (in K) as a function of engine axis')
-    plt.legend(loc='upper left')
-    plt.show()
-
-    coolant_temp_list.pop()
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, coolant_temp_list, color='blue')
-    plt.title('Coolant temperature (in K) as a function of engine axis')
-    plt.show()
-
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, total_flux_list, color='red', label="Actual heat flux")
-    plt.title('Heat flux (in W) as a function of engine axis')
-    plt.plot(xcanaux, critical_heat_flux_list, color="k", label="CHF")
-    plt.legend(loc='upper left')
-    plt.show()
-
-    mach_03 = [x * 0.3 for x in sound_speed_coolant_list]
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, coolant_velocity_list, color='blue', label='Coolant')
-    plt.plot(xcanaux, mach_03, color='orange', label='Mach 0.3 limit')
-    plt.title('Velocity (in m/s) of the coolant as a function of engine axis')
-    plt.legend(loc='upper left')
-    plt.show()
-
-    coolant_pressure_list.pop()
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, coolant_pressure_list, color='orange')
-    plt.title('Pressure drop in the cooling channels')
-    plt.show()
-
-if plot_detail >= 2:
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, wallcond_list, color='orangered')
-    plt.title('Conductivity of the wall as a function of engine axis')
-    plt.show()
-
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, hg_list, color='orangered')
-    plt.title('Convection coefficient Hg as a function of engine axis')
-    plt.show()
-
-    plt.figure(dpi=figure_dpi)
-    coolant_density_list.pop()
-    plt.plot(xcanaux, coolant_density_list, color='blue')
-    plt.title('Volumic mass of the coolant as a function of engine axis')
-    plt.show()
-
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, rad_CO2_list, color='r', label='CO2')
-    plt.plot(xcanaux, rad_H2O_list, color='b', label='H2O')
-    plt.plot(xcanaux, rad_flux_list, color='g', label='total')
-    plt.title('Radiative heat flux(W/m2)')
-    plt.legend()
-    plt.show()
-
-if plot_detail >= 3:
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, coolant_reynolds_list, color='blue')
-    plt.title("Reynolds number of the coolant as a function of the engine axis")
-    plt.show()
-
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, hotgas_visc_list, color='orangered')
-    plt.title("Gas viscosity as a function of the engine axis")
-    plt.show()
-
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, hotgas_cp_list, color='orangered')
-    plt.title("Gas Cp as a function of the engine axis")
-    plt.show()
-
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, hotgas_cond_list, color='orangered')
-    plt.title("Gas conductivity as a function of engine axis")
-    plt.show()
-
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, hotgas_prandtl_list, color='orangered')
-    plt.title("Gas Prandtl number as a function of engine axis")
-    plt.show()
-
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, sigma_list, color='orangered')
-    plt.title("Sigma as a function of the engine axis")
-    plt.show()
-
-    coolant_cond_list.pop()
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, coolant_cond_list, color='blue')
-    plt.title('Conductivity of the coolant as a function of engine axis')
-    plt.show()
-
-    coolant_cp_list.pop()
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, coolant_cp_list, color='blue')
-    plt.title('Cp of the coolant as a function of engine axis')
-    plt.show()
-
-    coolant_viscosity_list.pop()
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, coolant_viscosity_list, color='blue')
-    plt.title('Viscosity of the coolant as a function of engine axis')
-    plt.show()
-
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, sound_speed_coolant_list, color='pink')
-    plt.title('Sound velocity of the coolant (in m/s) as a function of engine axis')
-    plt.show()
-
-if plot_detail >= 1 and show_3d_plots:
-    colormap = plt.cm.plasma
-    inv = 0, 0, 0
-    view3d(inv, xcanaux, ycanaux, total_flux_list, colormap, "Heat flux (in MW/m²)", size2, limitation)
-
-    colormap = plt.cm.coolwarm
-    inv = 0, 0, 0
-    view3d(inv, xcanaux, ycanaux, coolant_temp_list, colormap, "Temperature of the coolant (in K)", size2, limitation)
-
-if plot_detail >= 2 and show_3d_plots:
-    colormap = plt.cm.magma
-    inv = 0, 0, 0  # 1 means should be reversed
-    view3d(inv, xcanaux, ycanaux, coldwall_temp_list, colormap, "Wall temperature on the gas side (in K)", size2,
-           limitation)
-
-if plot_detail >= 1:
-    end_d1 = time.perf_counter()  # End of the display of 1D timer
-    time_elapsed = f"{round(end_d1 - start_d1, 2)}"  # 1D display elapsed time (in s)
-    if len(time_elapsed) <= 3:
-        time_elapsed_d1 = f"   {time_elapsed} s"
-    elif len(time_elapsed) == 4:
-        time_elapsed_d1 = f"  {time_elapsed} s"
-    elif len(time_elapsed) == 5:
-        time_elapsed_d1 = f" {time_elapsed} s"
-    else:
-        time_elapsed_d1 = f"{time_elapsed} s"
 
 # %% Flux computation in 2D and 3D
 """2D flux computation"""
@@ -689,7 +451,6 @@ rad_CO2_list.reverse()
 rad_H2O_list.reverse()
 rad_flux_list.reverse()
 critical_heat_flux_list.reverse()
-
 # %% Preparation of the lists for CAD modelisation
 "Changing the coordinates of the height of the channels (otherwise it is geometrically wrong)"
 
@@ -721,19 +482,28 @@ for i in range(0, nb_points_channel):
     verifhtre = (((newxhtre[i] - xcanaux[i]) ** 2) + ((newyhtre[i] - ycanaux[i]) ** 2)) ** 0.5
     verification.append(verifhtre)
 
-if plot_detail >= 3:
-    plt.figure(dpi=figure_dpi)
-    plt.plot(newxhtre, newyhtre, color='blue', label='New height')
-    plt.plot(xcanaux, ycanaux, color='chocolate', label='Former height')
-    plt.title("Geometrical aspect of the channel (height as a function of the engine axis)")
-    plt.axis("equal")
-    plt.legend(loc='upper left')
-    plt.show()
+# %% Display of the analysis results
+print("█                                                                          █")
 
-    plt.figure(dpi=figure_dpi)
-    plt.plot(xcanaux, verification)
-    plt.title("Checking the height of the generated channels")
-    plt.show()
+parameters_plotter = (plot_detail, show_3d_plots, show_2D_temperature,
+                      do_final_3d_plot, figure_dpi, size2, limitation,
+                      show_plots, save_plots)
+data_plotter = (x_coord_list_mm, y_coord_list_mm, x_coord_list, y_coord_list, ycanaux, xcanaux,
+                cross_section_area_list, gamma_list, mach_list, pressure_list, Molfrac_H2O, Molfrac_CO2,
+                partial_p_H2O_list, partial_p_CO2_list, hotgas_temp_list, hot_gas_temp_list_saved,
+                larg_ailette_list, larg_canal, ht_canal, wall_thickness, area_channel, hlnormal_list,
+                hlcor_list, hlcor_list_2, hotwall_temp_list, coldwall_temp_list, total_flux_list,
+                critical_heat_flux_list, coolant_temp_list, coolant_pressure_list, sound_speed_coolant_list,
+                coolant_velocity_list, wallcond_list, material_name, hg_list, coolant_density_list, rad_CO2_list,
+                rad_H2O_list, rad_flux_list, hotgas_visc_list, hotgas_cp_list, hotgas_cond_list,
+                hotgas_prandtl_list, sigma_list, coolant_reynolds_list, coolant_cond_list, coolant_cp_list,
+                coolant_viscosity_list, coolant_prandtl_list, newyhtre, verification)
+
+# Plot the results !
+start_d1 = time.perf_counter()
+plotter(parameters_plotter, data_plotter)
+end_d1 = time.perf_counter()
+time_elapsed_d1 = f"{round(end_d1 - start_d1, 2)}"
 
 # %% Writing the results of the study in a CSV file
 
@@ -757,7 +527,7 @@ if write_in_csv:
          "Channel width [mm]",
          "Channel height [mm]",
          "Channel area [m²]",
-         "Hydraulic diameter [m]",
+         "Hydraulic diameter [mm]",
 
          "Gas viscosity [µPa.s]",
          "Gas cp [J/kg.K]",

@@ -76,7 +76,7 @@ def carto3d(inv, x, y, mesure, col, title, number, limitation):
     #     mesure.reverse()
 
 
-def view3d(inv, x, y, mesure, col, title, size2, limitation):
+def view3d(inv, x, y, mesure, col, title, size2, limitation, show=True):
     if inv[0] == 1:
         x.reverse()
     if inv[1] == 1:
@@ -110,7 +110,9 @@ def view3d(inv, x, y, mesure, col, title, size2, limitation):
     ax.view_init(15, 150)
     fig.colorbar(p, ax=ax, shrink=0.4, aspect=15)
     plt.title(title, fontsize=25)
-    plt.show()
+
+    if show:
+        plt.show()
 
     if inv[0] == 1:
         x.reverse()

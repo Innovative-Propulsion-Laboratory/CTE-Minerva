@@ -7,10 +7,12 @@ Created on Sat Dec 19 21:46:19 2020
 import numpy as np
 import csv
 import matplotlib.pyplot as plt
+import cte_tools as t
 
 
 # x_coords_filename,y_coords_filename
-# def canauxangl(plagex, plagey, nbc, lrg_col, ht, ht_c, ht_div, tore, debit_total, epaisseur_chemise, e_col, e_div, e_c):
+# def canauxangl(plagex, plagey, nbc, lrg_col, ht, ht_c, ht_div, tore, debit_total, epaisseur_chemise, e_col, e_div,
+# e_c):
 #     figure_dpi = 150
 #     crx = csv.reader(open(plagex, "r"))  # ouverture des x
 #     cry = csv.reader(open(plagey, "r"))  # ouverture des y
@@ -151,7 +153,7 @@ def canaux(profile_data, width_data, height_data, thickness_data, coefficients,
     ycanaux = [y_inj + wall_thickness[0]]  # Corrected thickness (to match with the geometry of the engine)
     for i in range(1, longc):
         vect = (xcanaux[i] - xcanaux[i - 1]) / ((((y_coord_avec_canaux[i] - y_coord_avec_canaux[i - 1]) ** 2) +
-                                                  ((xcanaux[i] - xcanaux[i - 1]) ** 2)) ** 0.5)
+                                                 ((xcanaux[i] - xcanaux[i - 1]) ** 2)) ** 0.5)
         angulaire.append(np.rad2deg(np.arccos(vect)))
         """
         newep = y_coord_avec_canaux[i] + wall_thickness[i] / np.cos(np.deg2rad(angulaire[i]))
@@ -159,30 +161,11 @@ def canaux(profile_data, width_data, height_data, thickness_data, coefficients,
         """
         ycanaux.append(y_coord_avec_canaux[i] + wall_thickness[i] / vect)
 
-    if plot_detail >= 3:
-        plt.figure(dpi=figure_dpi)
-        plt.plot(xcanaux, y_coord_avec_canaux, color='chocolate', label='y on hot gas side')
-        plt.plot(xcanaux, ycanaux, color='blue', label='y on coolant side')
-        plt.title('y coordinate of wall as a function of the engine axis')
-        plt.legend(loc='lower left')
-        plt.show()
-
     veritas = []
     for i in range(0, longc):
         verifepe = (((ycanaux[i] - y_value[i]) ** 2) - (
                 np.sin(np.deg2rad(angulaire[i])) * (ycanaux[i] - y_value[i])) ** 2) ** 0.5
         veritas.append(verifepe)
-
-    if plot_detail >= 3:
-        plt.figure(dpi=figure_dpi)
-        plt.plot(xcanaux, veritas)
-        plt.title('Channel thickness verification')
-        plt.show()
-        
-        plt.figure(dpi=figure_dpi)
-        plt.plot(xcanaux, ycanaux, color='chocolate')
-        plt.title('Channel travel as a function of the engine axis (y of the cold wall)')
-        plt.show()
 
     debit_volumique_canal = debit_volumique_total_cool / nbc  # Volumic flow rate in a channel
     y_col = ycanaux[pos_col]  # y coordonate of the cold wall at the throat
@@ -270,28 +253,5 @@ def canaux(profile_data, width_data, height_data, thickness_data, coefficients,
         writer.writerow(["End"])
         file.close()
 
-    if plot_detail >= 3:
-        plt.figure(dpi=figure_dpi)
-        plt.plot(xcanaux, larg_ailette, label='Rib width', color='chocolate')
-        plt.plot(xcanaux, larg_canal, label='Channel width', color='green')
-        plt.title('Width of channels and ribs')
-        plt.legend(loc='upper left')
-        plt.show()
-
-        plt.figure(dpi=figure_dpi)
-        plt.plot(xcanaux, wall_thickness, color='chocolate')
-        plt.title('Thickness of chamber wall as a function of the engine axis')
-        plt.show()
-
-        plt.figure(dpi=figure_dpi)
-        plt.plot(xcanaux, ht_canal, color='chocolate')
-        plt.title('Channel height as a function of the engine axis')
-        plt.show()
-
-    if plot_detail >= 1:
-        plt.figure(dpi=figure_dpi)
-        plt.plot(xcanaux, area_channel, color='chocolate')
-        plt.title('Channel cross-sectionnal area as a function of the engine axis')
-        plt.show()
-
-    return xcanaux, ycanaux, larg_canal, larg_ailette, ht_canal, wall_thickness, area_channel, longc, y_coord_avec_canaux
+    return xcanaux, ycanaux, larg_canal, larg_ailette, ht_canal, wall_thickness, area_channel, longc, \
+           y_coord_avec_canaux
