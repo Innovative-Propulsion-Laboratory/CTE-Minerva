@@ -503,7 +503,15 @@ data_plotter = (x_coord_list_mm, y_coord_list_mm, x_coord_list, y_coord_list, yc
 start_d1 = time.perf_counter()
 plotter(parameters_plotter, data_plotter)
 end_d1 = time.perf_counter()
-time_elapsed_d1 = f"{round(end_d1 - start_d1, 2)}"
+time_elapsed = f"{round(end_d1 - start_d1, 2)}"  # 1D display elapsed time (in s)
+if len(time_elapsed) <= 3:
+    time_elapsed_d1 = f"   {time_elapsed} s"
+elif len(time_elapsed) == 4:
+    time_elapsed_d1 = f"  {time_elapsed} s"
+elif len(time_elapsed) == 5:
+    time_elapsed_d1 = f" {time_elapsed} s"
+else:
+    time_elapsed_d1 = f"{time_elapsed} s"
 
 # %% Writing the results of the study in a CSV file
 
