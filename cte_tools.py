@@ -54,9 +54,8 @@ def tempcorrige_pempie(temp_original, gamma, mach):
     """
 
     Pr = 4 * gamma / (9 * gamma - 5)
-    temp_corrected = temp_original * ((1 + (Pr ** 0.33) * (
-            (gamma - 1) / gamma) * mach ** 2) / (1 + (
-            (gamma - 1) / gamma) * mach ** 2))
+    temp_corrected = temp_original * (
+                (1 + (Pr ** 0.33) * ((gamma - 1) / 2) * mach ** 2) / (1 + ((gamma - 1) / 2) * mach ** 2))
 
     return temp_corrected
 
