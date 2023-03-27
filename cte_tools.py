@@ -54,10 +54,10 @@ def tempcorrige_pempie(temp_original, gamma, mach):
     """
 
     Pr = 4 * gamma / (9 * gamma - 5)
-    temp_corrected = temp_original * (
-                (1 + (Pr ** 0.33) * ((gamma - 1) / 2) * mach ** 2) / (1 + ((gamma - 1) / 2) * mach ** 2))
+    recovery_temp = temp_original * (
+            (1 + (Pr ** 0.33) * ((gamma - 1) / 2) * mach ** 2) / (1 + ((gamma - 1) / 2) * mach ** 2))
 
-    return temp_corrected
+    return recovery_temp
 
 
 def tempcorrige_denies(temp_original, gamma, mach):
@@ -66,9 +66,15 @@ def tempcorrige_denies(temp_original, gamma, mach):
     """
 
     Pr = 4 * gamma / (9 * gamma - 5)
-    temp_corrected = temp_original * (1 + (Pr ** 0.33) * (mach ** 2) * ((gamma - 1) / 2))
+    recovery_temp = temp_original * (1 + (Pr ** 0.33) * (mach ** 2) * ((gamma - 1) / 2))
 
-    return temp_corrected
+    return recovery_temp
+
+
+def total_temp_calculation(temp_original, gamma, mach):
+    """Compute the total temperature of the hot gases"""
+
+    return temp_original * (1 + (mach ** 2) * ((gamma - 1) / 2))
 
 
 def conductivity(Twg: float, Twl: float, material_name: str):
@@ -167,6 +173,10 @@ def compute_chf(P_SI, T_SI, V_SI, rho_SI, Re):
     CHF_SI = 1634246 * CHF_IMP  # W/m²
 
     return CHF_SI
+
+
+def chen_correlation():
+    pass
 
 
 def one_plot(x, y,

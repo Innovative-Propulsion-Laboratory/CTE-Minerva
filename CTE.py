@@ -71,6 +71,7 @@ gamma_t_input = float(input_data_list[8])  # Gamma in the throat
 gamma_e_input = float(input_data_list[9])  # Gamma at the exit
 molar_mass = float(input_data_list[10])  # Molar mass of the gases
 c_star = float(input_data_list[11])  # Caracteristic velocity
+combustion_efficiency = float(input_data_list[22])  # Caracteristic velocity efficiency
 xH2O_c_input = float(input_data_list[16])  # Molar fraction of the H2O in the chamber
 xH2O_t_input = float(input_data_list[17])  # Molar fraction of the H2O in the throat
 xH2O_e_input = float(input_data_list[18])  # Molar fraction of the H2O at the exit
@@ -170,20 +171,24 @@ partial_p_H2O_list = [pressure_list[i] * Molfrac_H2O[i] for i in range(0, nb_poi
 partial_p_CO2_list = [pressure_list[i] * Molfrac_CO2[i] for i in range(0, nb_points)]  # Partial pressure of the CO2
 
 # %% Hot gas temperature computation
-hotgas_temp_list = [Tc]
+static_hotgas_temp_list = [Tc]
 with tqdm(total=nb_points - 1,
           desc="█ Computing gas temperature    ",
           unit="|   █", bar_format="{l_bar}{bar}{unit}",
           ncols=76) as progressbar:
     for i in range(0, nb_points - 1):
-        temperature = t.temperature_hotgas_solv(mach_list[i], mach_list[i + 1], hotgas_temp_list[i], gamma_list[i])
-        hotgas_temp_list.append(temperature)
+        temperature = t.temperature_hotgas_solv(mach_list[i], mach_list[i + 1],
+                                                static_hotgas_temp_list[i],
+                                                gamma_list[i])
+        static_hotgas_temp_list.append(temperature)
         progressbar.update(1)
 
-hot_gas_temp_list_saved = hotgas_temp_list.copy()
+static_hotgas_temp_list = [combustion_efficiency * T for T in static_hotgas_temp_list]
 # List of corrected gas temperatures (max diff with original is about 75 K)
-hotgas_temp_list = [t.tempcorrige_pempie(hotgas_temp_list[i], gamma_list[i], mach_list[i]) for i in
-                    range(0, nb_points)]
+total_hotgas_temp_list = [t.total_temp_calculation(static_hotgas_temp_list[i], gamma_list[i], mach_list[i]) for i in
+                          range(0, nb_points)]
+recovery_hotgas_temp_list = [t.tempcorrige_pempie(total_hotgas_temp_list[i], gamma_list[i], mach_list[i]) for i in
+                             range(0, nb_points)]
 
 # %% Dimensions
 print("█ Computing channel geometric                                              █")
@@ -289,7 +294,7 @@ PH2O_list_saved = partial_p_H2O_list[:]
 PCO2_list_saved = partial_p_CO2_list[:]
 
 # Remove the data points before the manifold
-hotgas_temp_list = hotgas_temp_list[:nb_points_channel]
+recovery_hotgas_temp_list = recovery_hotgas_temp_list[:nb_points_channel]
 cross_section_area_list = cross_section_area_list[:nb_points_channel]
 mach_list = mach_list[:nb_points_channel]
 gamma_list = gamma_list[:nb_points_channel]
@@ -299,18 +304,18 @@ partial_p_CO2_list = partial_p_CO2_list[:nb_points_channel]
 gamma_list.reverse()
 mach_list.reverse()
 cross_section_area_list.reverse()
-hotgas_temp_list.reverse()
+recovery_hotgas_temp_list.reverse()
 partial_p_H2O_list.reverse()
 partial_p_CO2_list.reverse()
 
 # %% Main computation
 
-data_hotgas = (hotgas_temp_list, molar_mass, gamma_list, Pc, c_star, partial_p_H2O_list, partial_p_CO2_list)
+data_hotgas = (recovery_hotgas_temp_list, molar_mass, gamma_list, Pc, c_star, partial_p_H2O_list, partial_p_CO2_list)
 data_coolant = (Temp_cool_init, Pressure_cool_init, fluid, debit_mass_coolant)
 data_channel = (xcanaux, ycanaux, larg_canal, larg_ailette_list, ht_canal,
                 wall_thickness, area_channel, nb_points_channel)
 data_chamber = (y_coord_avec_canaux, nbc, diam_throat, curv_radius_pre_throat, area_throat,
-                roughness, cross_section_area_list, mach_list, material_name)
+                roughness, cross_section_area_list, mach_list, material_name, combustion_efficiency)
 
 # Call the main solving loop
 hlcor_list, hlcor_list_2, hotgas_visc_list, hotgas_cp_list, hotgas_cond_list, \
@@ -343,7 +348,8 @@ if show_2D_temperature:
     dx = 0.00004  # *3.5
     location = " at the beginning of the chamber"
     carto2D(larg_ailette_list[-1] + larg_canal[-1], larg_canal[-1], e_conv, ht_canal[-1], dx, hg_list[-1],
-            wallcond_list[-1], hotgas_temp_list[-1], hlcor_list[-1], coolant_temp_list[-1], 5, True, 1, location, False)
+            wallcond_list[-1], recovery_hotgas_temp_list[-1], hlcor_list[-1], coolant_temp_list[-1], 5, True, 1,
+            location, False)
 
     # At the throat
     print("█ Results at the throat :                                                  █")
@@ -351,14 +357,15 @@ if show_2D_temperature:
     dx = 0.000025  # *3.5
     location = " at the throat"
     carto2D(larg_ailette_list[pos_col] + larg_canal[pos_col], larg_canal[pos_col], e_col, ht_canal[pos_col],
-            dx, hg_list[pos_col], wallcond_list[pos_col], hotgas_temp_list[pos_col], hlcor_list[pos_col],
+            dx, hg_list[pos_col], wallcond_list[pos_col], recovery_hotgas_temp_list[pos_col], hlcor_list[pos_col],
             coolant_temp_list[pos_col], 15, True, 2, location, False)
     # At the end of the divergent
     print("█ Results at the manifold :                                                █")
     dx = 0.00004
     location = " at the manifold"
     carto2D(larg_ailette_list[0] + larg_canal[0], larg_canal[0], e_tore, ht_canal[0], dx, hg_list[0],
-            wallcond_list[0], hotgas_temp_list[0], hlcor_list[0], coolant_temp_list[0], 5, True, 1, location, False)
+            wallcond_list[0], recovery_hotgas_temp_list[0], hlcor_list[0], coolant_temp_list[0], 5, True, 1, location,
+            False)
 
     end_d2 = time.perf_counter()  # End of the display of 2D timer
     time_elapsed = f"{round(end_d2 - start_d2, 2)}"  # 2D display elapsed time (in s)
@@ -386,7 +393,7 @@ if do_final_3d_plot:
               ncols=76) as progressbar:
         for i in range(0, nb_points_channel):
             temperature_slice = carto2D(larg_ailette_list[i] + larg_canal[i], larg_canal[i], wall_thickness[i],
-                                        ht_canal[i], dx, hg_list[i], wallcond_list[i], hotgas_temp_list[i],
+                                        ht_canal[i], dx, hg_list[i], wallcond_list[i], recovery_hotgas_temp_list[i],
                                         hlnormal_list[i], coolant_temp_list[i], 3, False, 1, "", True)
             temperature_slice_list.append(temperature_slice)
             progressbar.update(1)
@@ -413,7 +420,7 @@ start_e = time.perf_counter()  # Start of the end timer
 cross_section_area_list.reverse()
 gamma_list.reverse()
 mach_list.reverse()
-hotgas_temp_list.reverse()
+recovery_hotgas_temp_list.reverse()
 xcanaux.reverse()
 ycanaux.reverse()
 larg_canal.reverse()
@@ -490,9 +497,9 @@ parameters_plotter = (plot_detail, show_3d_plots, show_2D_temperature,
                       show_plots, save_plots)
 data_plotter = (x_coord_list_mm, y_coord_list_mm, x_coord_list, y_coord_list, ycanaux, xcanaux,
                 cross_section_area_list, gamma_list, mach_list, pressure_list, Molfrac_H2O, Molfrac_CO2,
-                partial_p_H2O_list, partial_p_CO2_list, hotgas_temp_list, hot_gas_temp_list_saved,
-                larg_ailette_list, larg_canal, ht_canal, wall_thickness, area_channel, hlnormal_list,
-                hlcor_list, hlcor_list_2, hotwall_temp_list, coldwall_temp_list, total_flux_list,
+                partial_p_H2O_list, partial_p_CO2_list, total_hotgas_temp_list, recovery_hotgas_temp_list,
+                static_hotgas_temp_list, larg_ailette_list, larg_canal, ht_canal, wall_thickness, area_channel,
+                hlnormal_list, hlcor_list, hlcor_list_2, hotwall_temp_list, coldwall_temp_list, total_flux_list,
                 critical_heat_flux_list, coolant_temp_list, coolant_pressure_list, sound_speed_coolant_list,
                 coolant_velocity_list, wallcond_list, material_name, hg_list, coolant_density_list, rad_CO2_list,
                 rad_H2O_list, rad_flux_list, hotgas_visc_list, hotgas_cp_list, hotgas_cond_list,
@@ -597,8 +604,8 @@ if write_in_csv:
                                         hotgas_cp_list[i],
                                         hotgas_cond_list[i],
                                         hotgas_prandtl_list[i],
-                                        hot_gas_temp_list_saved[i],
-                                        hotgas_temp_list[i],
+                                        static_hotgas_temp_list[i],
+                                        recovery_hotgas_temp_list[i],
 
                                         hg_list[i],
                                         sigma_list[i],

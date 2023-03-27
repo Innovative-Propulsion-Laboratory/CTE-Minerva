@@ -18,7 +18,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
     xcanaux, ycanaux, larg_canal, larg_ailette_list, ht_canal, wall_thickness, \
     area_channel, nb_points_channel = channel_data
     y_coord_avec_canaux, nbc, diam_throat, curv_radius_pre_throat, area_throat, roughness, \
-    cross_section_area_list, mach_list, material_name = chamber_data
+    cross_section_area_list, mach_list, material_name, combustion_efficiency = chamber_data
 
     # Lists containing the physical quantities at each point
     coolant_temp_list = [init_coolant_temp]
@@ -117,9 +117,10 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
                 coldwall_temp = new_coldwall_temp
                 hotwall_temp = new_hotwall_temp
 
+                c_star_corr = c_star * np.sqrt(combustion_efficiency)
                 # Gas-side convective heat transfer coefficient (Bartz equation)
                 hg = (0.026 / (diam_throat ** 0.2) * (((hotgas_visc ** 0.2) * hotgas_cp) / (hotgas_prandtl ** 0.6)) * (
-                        (Pc / c_star) ** 0.8) * ((diam_throat / curv_radius_pre_throat) ** 0.1) * (
+                        (Pc / c_star_corr) ** 0.8) * ((diam_throat / curv_radius_pre_throat) ** 0.1) * (
                               (area_throat / cross_section_area_list[i]) ** 0.9)) * sigma
 
                 # Coolant-side convective heat transfer coefficient (Modified Gnielinski by M.M. Sarafraz)

@@ -20,3 +20,4 @@ nH2O_e,0.45343
 nCO2_c,0.11763
 nCO2_t,0.12475
 nCO2_e,0.15121
+comb_efficiency,1

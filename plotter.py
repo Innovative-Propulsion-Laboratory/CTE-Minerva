@@ -17,9 +17,9 @@ def plotter(parameters, data):
 
     x_coord_list_mm, y_coord_list_mm, x_coord_list, y_coord_list, ycanaux, xcanaux, \
     cross_section_area_list, gamma_list, mach_list, pressure_list, Molfrac_H2O, Molfrac_CO2, \
-    partial_p_H2O_list, partial_p_CO2_list, hotgas_temp_list, hot_gas_temp_list_saved, \
-    larg_ailette_list, larg_canal, ht_canal, wall_thickness, area_channel, hlnormal_list, \
-    hlcor_list, hlcor_list_2, hotwall_temp_list, coldwall_temp_list, total_flux_list, \
+    partial_p_H2O_list, partial_p_CO2_list, total_hotgas_temp_list, recovery_hotgas_temp_list, \
+    static_hotgas_temp_list, larg_ailette_list, larg_canal, ht_canal, wall_thickness, area_channel, \
+    hlnormal_list, hlcor_list, hlcor_list_2, hotwall_temp_list, coldwall_temp_list, total_flux_list, \
     critical_heat_flux_list, coolant_temp_list, coolant_pressure_list, sound_speed_coolant_list, \
     coolant_velocity_list, wallcond_list, material_name, hg_list, coolant_density_list, rad_CO2_list, \
     rad_H2O_list, rad_flux_list, hotgas_visc_list, hotgas_cp_list, hotgas_cond_list, \
@@ -64,7 +64,7 @@ def plotter(parameters, data):
                                xlabel=r'x-coordinate [$mm$]',
                                ylabel=r'$Ma$ [-]', ymin=0, xmin=-200, dpi=figure_dpi, show=show))
 
-    if plot_detail >= 1 and show_3d_plots:
+    if plot_detail >= 2 and show_3d_plots:
         colormap = plt.cm.Spectral
         inv = 1, 1, 1  # 1 means should be reversed
         view3d(inv, x_coord_list, y_coord_list, mach_list,
@@ -105,12 +105,13 @@ def plotter(parameters, data):
                               ymin=0, xmin=-200, dpi=figure_dpi, show=show, sci_notation=True))
 
     # Plots of the temperature in the engine (2D/3D)
-    if plot_detail >= 2:
+    if plot_detail >= 1:
         figs.append(t.n_plots(x_coord_list_mm,
-                              y_list=[hot_gas_temp_list_saved, hotgas_temp_list],
-                              y_label_list=[r'Real gas temperature $T_g$',
-                                            r'Recovery temperature $T_{aw}$'],
-                              colors_list=['r', 'b'],
+                              y_list=[static_hotgas_temp_list, recovery_hotgas_temp_list, total_hotgas_temp_list],
+                              y_label_list=[r'Static temperature $T_s$',
+                                            r'Recovery temperature $T_{aw}$',
+                                            r'Total temperature $T_{tot}$'],
+                              colors_list=['r', 'b', 'k'],
                               title=r'Combustion gases temperature',
                               xlabel=r'x-coordinate [$mm$]',
                               ylabel=r'$T$ [K]', xmin=-200, dpi=figure_dpi, show=show))
@@ -118,7 +119,7 @@ def plotter(parameters, data):
     if plot_detail >= 2 and show_3d_plots:
         colormap = plt.cm.coolwarm
         inv = 1, 1, 1  # 1 means should be reversed
-        view3d(inv, x_coord_list, y_coord_list, hotgas_temp_list,
+        view3d(inv, x_coord_list, y_coord_list, recovery_hotgas_temp_list,
                colormap, 'Temperature of the hot gas (in K)', size2, limitation, show=show)
 
     if plot_detail >= 3:
@@ -224,6 +225,12 @@ def plotter(parameters, data):
                               ylabel=r'$\dot q_{rad}$ [$\frac{W}{m^2}$]',
                               ymin=0, xmin=-200, dpi=figure_dpi, show=show))
 
+        figs.append(t.one_plot(x_coord_list_mm, sigma_list,
+                               title=r'Bartz equation coefficient $\sigma$',
+                               xlabel=r'x-coordinate [$mm$]',
+                               ylabel=r'$\sigma$ [-]',
+                               xmin=-200, dpi=figure_dpi, show=show))
+
     if plot_detail >= 3:
         figs.append(t.one_plot(x_coord_list_mm, hotgas_visc_list,
                                title=r'Gas dynamic viscosity',
@@ -247,12 +254,6 @@ def plotter(parameters, data):
                                title=r'Hot gas Prandtl number',
                                xlabel=r'x-coordinate [$mm$]',
                                ylabel=r'$Pr_g$ [-]',
-                               xmin=-200, dpi=figure_dpi, show=show))
-
-        figs.append(t.one_plot(x_coord_list_mm, sigma_list,
-                               title=r'Bartz equation coefficient $\sigma$',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'$\sigma$ [-]',
                                xmin=-200, dpi=figure_dpi, show=show))
 
         figs.append(t.one_plot(x_coord_list_mm, coolant_reynolds_list,
