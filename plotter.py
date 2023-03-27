@@ -116,6 +116,14 @@ def plotter(parameters, data):
                               xlabel=r'x-coordinate [$mm$]',
                               ylabel=r'$T$ [K]', xmin=-200, dpi=figure_dpi, show=show))
 
+        figs.append(t.one_plot(x_coord_list_mm, recovery_hotgas_temp_list,
+                               title=r'Recovery temperature $T_{aw}$',
+                               xlabel=r'x-coordinate [$mm$]', fmt='b',
+                               ylabel=r'$T$ [K]',
+                               ymin=min(recovery_hotgas_temp_list) - 30,
+                               ymax=max(recovery_hotgas_temp_list) + 30,
+                               xmin=-200, dpi=figure_dpi, show=show))
+
     if plot_detail >= 2 and show_3d_plots:
         colormap = plt.cm.coolwarm
         inv = 1, 1, 1  # 1 means should be reversed

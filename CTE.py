@@ -46,7 +46,7 @@ input_CEA_data = "input/Minerva_project.txt"  # Minerva's parameters (found with
 size2 = 16  # Used for the height of the display in 3D view
 limitation = 0.05  # used to build the scales in 3D view
 figure_dpi = 300  # Dots Per Inch (DPI) for all figures (lower=faster)
-plot_detail = 3  # 0=No plots; 1=Important plots; 3=All plots
+plot_detail = 1  # 0=No plots; 1=Important plots; 3=All plots
 show_plots = True
 save_plots = False
 show_3d_plots = False
@@ -186,7 +186,7 @@ with tqdm(total=nb_points - 1,
 
 static_hotgas_temp_list = [combustion_efficiency * T for T in static_hotgas_temp_list]
 # List of corrected gas temperatures (max diff with original is about 75 K)
-total_hotgas_temp_list = [total_hotgas_temp for i in range(0, nb_points)]
+total_hotgas_temp_list = [combustion_efficiency * total_hotgas_temp for i in range(0, nb_points)]
 recovery_hotgas_temp_list = [t.tempcorrige_pempie(total_hotgas_temp_list[i], gamma_list[i], mach_list[i]) for i in
                              range(0, nb_points)]
 
