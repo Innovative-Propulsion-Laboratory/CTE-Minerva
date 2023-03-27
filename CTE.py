@@ -172,6 +172,7 @@ partial_p_CO2_list = [pressure_list[i] * Molfrac_CO2[i] for i in range(0, nb_poi
 
 # %% Hot gas temperature computation
 static_hotgas_temp_list = [Tc]
+total_hotgas_temp = t.total_temp_calculation(Tc, gamma_c_input, mach_init_gas)
 with tqdm(total=nb_points - 1,
           desc="█ Computing gas temperature    ",
           unit="|   █", bar_format="{l_bar}{bar}{unit}",
@@ -185,8 +186,7 @@ with tqdm(total=nb_points - 1,
 
 static_hotgas_temp_list = [combustion_efficiency * T for T in static_hotgas_temp_list]
 # List of corrected gas temperatures (max diff with original is about 75 K)
-total_hotgas_temp_list = [t.total_temp_calculation(static_hotgas_temp_list[i], gamma_list[i], mach_list[i]) for i in
-                          range(0, nb_points)]
+total_hotgas_temp_list = [total_hotgas_temp for i in range(0, nb_points)]
 recovery_hotgas_temp_list = [t.tempcorrige_pempie(total_hotgas_temp_list[i], gamma_list[i], mach_list[i]) for i in
                              range(0, nb_points)]
 
