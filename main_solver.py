@@ -4,7 +4,7 @@ from tqdm import tqdm
 import cte_tools as t
 
 
-def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
+def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False):
     """
     This is the main function used for solving the 1D case.
     The geometry is discretised into a 1 dimensionnal set of points.
@@ -123,16 +123,28 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
                         (Pc / c_star_corr) ** 0.8) * ((diam_throat / curv_radius_pre_throat) ** 0.1) * (
                               (area_throat / cross_section_area_list[i]) ** 0.9)) * sigma
 
-                # Coolant-side convective heat transfer coefficient (Modified Gnielinski by M.M. Sarafraz)
-                Nu = 0.02326 * (Re_cool ** 0.83 - 100) * Pr_cool ** 0.4201
+                if chen:
+                    hl = t.chen_correlation(Re_l=Re_cool, Pr_l=Pr_cool,
+                                            Dhy=Dhy,
+                                            cp_l=coolant_cp_list[i],
+                                            density_l=coolant_density_list[i],
+                                            cond_l=coolant_cond_list[i],
+                                            visc_l=coolant_viscosity_list[i],
+                                            T_l=coolant_temp_list[i],
+                                            P_l=coolant_pressure_list[i],
+                                            T_wall=coldwall_temp)
+                else:
+                    # Coolant-side convective heat transfer coefficient (Modified Gnielinski by M.M. Sarafraz)
+                    Nu = 0.02326 * (Re_cool ** 0.83 - 100) * Pr_cool ** 0.4201
 
-                # Nusselt number correction for the channel roughness
-                xi = t.darcy_weisbach(Dhy, Re_cool, roughness) / t.darcy_weisbach(Dhy, Re_cool, 0)
-                roughness_correction = xi * ((1 + 1.5 * Pr_cool ** (-1 / 6) * Re_cool ** (-1 / 8) * (Pr_cool - 1)) / (
-                        1 + 1.5 * Pr_cool ** (-1 / 6) * Re_cool ** (-1 / 8) * (Pr_cool * xi - 1)))
+                    # Nusselt number correction for the channel roughness
+                    xi = t.darcy_weisbach(Dhy, Re_cool, roughness) / t.darcy_weisbach(Dhy, Re_cool, 0)
+                    roughness_correction = xi * (
+                            (1 + 1.5 * Pr_cool ** (-1 / 6) * Re_cool ** (-1 / 8) * (Pr_cool - 1)) / (
+                            1 + 1.5 * Pr_cool ** (-1 / 6) * Re_cool ** (-1 / 8) * (Pr_cool * xi - 1)))
 
-                # Compute coolant-side convective heat-transfer coefficient
-                hl = Nu * roughness_correction * (coolant_cond_list[i] / Dhy)
+                    # Compute coolant-side convective heat-transfer coefficient
+                    hl = Nu * roughness_correction * (coolant_cond_list[i] / Dhy)
 
                 # Fin dimensions
                 D = 2 * y_coord_avec_canaux[i]  # Diameter inside the engine
@@ -181,22 +193,19 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
             dA_2 = (np.pi * D * dl) / nbc
 
             # New temperature at next point
-            delta_T_coolant = 0
-            """delta_T_coolant = ((flux * dA_1) / ((debit_mass_coolant / nbc) * coolant_cp_list[i]))"""
+            delta_T_coolant = ((flux * dA_1) / ((debit_mass_coolant / nbc) * coolant_cp_list[i]))
             new_coolant_temp = coolant_temp_list[i] + delta_T_coolant
 
             # Solving Colebrook's formula to obtain the Darcy-Weisbach friction factor
             frict_factor = t.darcy_weisbach(Dhy, Re_cool, roughness)
 
             # Computing pressure loss with the Darcy-Weisbach friction factor (no pressure loss taken into account)
-            delta_p = 0
-            new_coolant_pressure = coolant_pressure_list[i] - delta_p
-            """delta_p = 0.5 * frict_factor * (dl / Dhy) * coolant_density_list[i] * v_cool ** 2
-            """
+            delta_p = 0.5 * frict_factor * (dl / Dhy) * coolant_density_list[i] * v_cool ** 2
             new_coolant_pressure = coolant_pressure_list[i] - delta_p
 
             # Computing the new properties of the ethanol (properties considered constant)
             if new_coolant_pressure < 0:
+                print(f"Last coolant temperature :{new_coolant_temp:.2f} K")
                 raise ValueError("Negative pressure ! Pressure drop is too high.")
             new_cool_visc = flp.viscosity(P=new_coolant_pressure, T=new_coolant_temp, fluid=fluid)
             new_cool_cond = flp.conductivity(P=new_coolant_pressure, T=new_coolant_temp, fluid=fluid)
@@ -233,8 +242,9 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data):
             coolant_density_list.append(new_cool_dens)
             coolant_prandtl_list.append(Pr_cool)
             sound_speed_list.append(new_cool_sound_spd)
-            Nu_list.append(Nu)
-            Nu_corr_list.append(Nu * roughness_correction)
+            if not chen:
+                Nu_list.append(Nu)
+                Nu_corr_list.append(Nu * roughness_correction)
             Dhy_list.append(Dhy)
 
             pbar_main.update(1)

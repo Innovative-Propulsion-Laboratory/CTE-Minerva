@@ -46,7 +46,7 @@ input_CEA_data = "input/Minerva_project.txt"  # Minerva's parameters (found with
 size2 = 16  # Used for the height of the display in 3D view
 limitation = 0.05  # used to build the scales in 3D view
 figure_dpi = 300  # Dots Per Inch (DPI) for all figures (lower=faster)
-plot_detail = 1  # 0=No plots; 1=Important plots; 3=All plots
+plot_detail = 3  # 0=No plots; 1=Important plots; 3=All plots
 show_plots = True
 save_plots = False
 show_3d_plots = False
@@ -198,24 +198,24 @@ nbc = 42  # Number of channels
 manifold_pos = 0.104  # Position of the manifold from the throat (in m)
 
 # Widths
-lrg_inj = 0.00947  # Width of the channel in at the injection plate (in m)
-lrg_conv = 0.00947  # Width of the channel at the end of the cylindrical chamber (in m)
-lrg_col = 0.0024  # Width of the channel in the throat (in m)
-lrg_tore = 0.00744  # Width of the channel at the manifold (in m)
+lrg_inj = 0.0022  # Width of the channel in at the injection plate (in m)
+lrg_conv = 0.0015  # Width of the channel at the end of the cylindrical chamber (in m)
+lrg_col = 0.0013  # Width of the channel in the throat (in m)
+lrg_tore = 0.0015  # Width of the channel at the manifold (in m)
 
 # Heights
-ht_inj = 0.0007  # Height of the channel at the injection plate (in m)
-ht_conv = 0.0007  # Height of the channel at the end of the cylindrical chamber (in m)
-ht_col = 0.0007  # Height of the channel in the throat (in m)
-ht_tore = 0.0007  # Height of the channel at the manifold (in m)
+ht_inj = 0.0025  # Height of the channel at the injection plate (in m)
+ht_conv = 0.0015  # Height of the channel at the end of the cylindrical chamber (in m)
+ht_col = 0.0013  # Height of the channel in the throat (in m)
+ht_tore = 0.0015  # Height of the channel at the manifold (in m)
 
 # Thickness
 e_conv = 0.001  # Thickness of the wall at the chamber (in m)
 e_col = 0.001  # Thickness of the wall at the throat (in m)
 e_tore = 0.001  # Thickness of the wall at the manifold (in m)
 
-n1 = 0.001  # Width convergent
-n2 = 0.001  # Width divergent
+n1 = 1  # Width convergent
+n2 = 1  # Width divergent
 n3 = 1  # Height convergent
 n4 = 1  # Height divergent
 n5 = 1  # Thickness convergent
@@ -324,7 +324,7 @@ sigma_list, coolant_reynolds_list, coolant_temp_list, coolant_viscosity_list, \
 coolant_cond_list, coolant_cp_list, coolant_density_list, coolant_velocity_list, \
 coolant_pressure_list, coolant_prandtl_list, wallcond_list, sound_speed_coolant_list, hlnormal_list, \
 rad_flux_list, rad_CO2_list, rad_H2O_list, critical_heat_flux_list, Nu_list, Nu_corr_list, Dhy_list \
-    = mainsolver(data_hotgas, data_coolant, data_channel, data_chamber)
+    = mainsolver(data_hotgas, data_coolant, data_channel, data_chamber, chen=False)
 
 end_m = time.perf_counter()  # End of the main solution timer
 time_elapsed = f"{round(end_m - start_main_time, 2)}"  # Main computation elapsed time (in s)

@@ -175,8 +175,29 @@ def compute_chf(P_SI, T_SI, V_SI, rho_SI, Re):
     return CHF_SI
 
 
-def chen_correlation():
-    pass
+def chen_correlation(Re_l, Pr_l, Dhy, cp_l, density_l, cond_l,
+                     visc_l, T_l, P_l, T_wall):
+    F = 1
+    surf_tension = PropsSI('SURFACE_TENSION', 'T', T_l, 'Q', 1, 'Ethanol')
+    H_vap = PropsSI('H', 'P', P_l, 'Q', 1, 'Ethanol')
+    H_liq = PropsSI('H', 'P', P_l, 'Q', 0, 'Ethanol')
+    H_fg_SI = H_vap - H_liq
+    density_g = PropsSI('D', 'P', P_l, 'Q', 1, 'Ethanol')
+    T_sat = PropsSI('T', 'P', P_l, 'Q', 1, 'Ethanol')
+    P_sat = PropsSI('P', 'T', T_wall, 'Q', 0, 'Ethanol')
+
+    delta_T = T_wall - T_sat
+    delta_P = P_sat - P_l
+
+    num = (cond_l ** 0.79) * (cp_l ** 0.45) * (density_l ** 0.49)
+    denom = (surf_tension ** 0.5) * (visc_l ** 0.29) * (H_fg_SI ** 0.24) * (density_g ** 0.24)
+
+    S = 1 / (1 + 2.53e-6 * (Re_l ** 1.17))
+
+    h_macro = 0.023 * (Re_l ** 0.8) * (Pr_l ** 0.4) * (cond_l / Dhy) * F
+    h_micro = 0.00122 * (num / denom) * (abs(delta_T) ** 0.24) * (abs(delta_P) ** 0.75) * S
+
+    return h_macro + h_micro
 
 
 def one_plot(x, y,
