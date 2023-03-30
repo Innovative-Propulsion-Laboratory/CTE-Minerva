@@ -198,15 +198,15 @@ nbc = 42  # Number of channels
 manifold_pos = 0.104  # Position of the manifold from the throat (in m)
 
 # Widths
-lrg_inj = 0.0022  # Width of the channel in at the injection plate (in m)
+lrg_inj = 0.0025  # Width of the channel in at the injection plate (in m)
 lrg_conv = 0.0015  # Width of the channel at the end of the cylindrical chamber (in m)
-lrg_col = 0.0013  # Width of the channel in the throat (in m)
+lrg_col = 0.0015  # Width of the channel in the throat (in m)
 lrg_tore = 0.0015  # Width of the channel at the manifold (in m)
 
 # Heights
 ht_inj = 0.0025  # Height of the channel at the injection plate (in m)
 ht_conv = 0.0015  # Height of the channel at the end of the cylindrical chamber (in m)
-ht_col = 0.0013  # Height of the channel in the throat (in m)
+ht_col = 0.0015  # Height of the channel in the throat (in m)
 ht_tore = 0.0015  # Height of the channel at the manifold (in m)
 
 # Thickness
@@ -281,6 +281,7 @@ wall_thickness.reverse()
 xcanaux.reverse()
 larg_canal.reverse()
 area_channel.reverse()
+larg_ailette_list.reverse()
 ht_canal.reverse()
 ycanaux.reverse()
 y_coord_avec_canaux.reverse()
@@ -323,7 +324,7 @@ hotgas_prandtl_list, hg_list, hotwall_temp_list, coldwall_temp_list, total_flux_
 sigma_list, coolant_reynolds_list, coolant_temp_list, coolant_viscosity_list, \
 coolant_cond_list, coolant_cp_list, coolant_density_list, coolant_velocity_list, \
 coolant_pressure_list, coolant_prandtl_list, wallcond_list, sound_speed_coolant_list, hlnormal_list, \
-rad_flux_list, rad_CO2_list, rad_H2O_list, critical_heat_flux_list, Nu_list, Nu_corr_list, Dhy_list \
+rad_flux_list, rad_CO2_list, rad_H2O_list, critical_heat_flux_list, Nu_list, Nu_corr_list, Dhy_list, vapor_quality_list \
     = mainsolver(data_hotgas, data_coolant, data_channel, data_chamber, chen=False)
 
 end_m = time.perf_counter()  # End of the main solution timer
@@ -504,7 +505,7 @@ data_plotter = (x_coord_list_mm, y_coord_list_mm, x_coord_list, y_coord_list, yc
                 coolant_velocity_list, wallcond_list, material_name, hg_list, coolant_density_list, rad_CO2_list,
                 rad_H2O_list, rad_flux_list, hotgas_visc_list, hotgas_cp_list, hotgas_cond_list,
                 hotgas_prandtl_list, sigma_list, coolant_reynolds_list, coolant_cond_list, coolant_cp_list,
-                coolant_viscosity_list, coolant_prandtl_list, newyhtre, verification)
+                coolant_viscosity_list, coolant_prandtl_list, newyhtre, verification, vapor_quality_list)
 
 # Plot the results !
 start_d1 = time.perf_counter()

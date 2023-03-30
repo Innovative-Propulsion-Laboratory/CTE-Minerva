@@ -24,7 +24,7 @@ def plotter(parameters, data):
     coolant_velocity_list, wallcond_list, material_name, hg_list, coolant_density_list, rad_CO2_list, \
     rad_H2O_list, rad_flux_list, hotgas_visc_list, hotgas_cp_list, hotgas_cond_list, \
     hotgas_prandtl_list, sigma_list, coolant_reynolds_list, coolant_cond_list, coolant_cp_list, \
-    coolant_viscosity_list, coolant_prandtl_list, newyhtre, verification = data
+    coolant_viscosity_list, coolant_prandtl_list, newyhtre, verification, vapor_quality = data
 
     # Plot of the profile of the engine
     if plot_detail >= 3:

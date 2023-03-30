@@ -2,6 +2,7 @@ import numpy as np
 import fluid_properties as flp
 from tqdm import tqdm
 import cte_tools as t
+from CoolProp.CoolProp import PropsSI
 
 
 def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False):
@@ -51,6 +52,9 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
     Nu_corr_list = []
     Dhy_list = []
     coolant_prandtl_list = []
+    phase = 0
+    vapor_quality = 0
+    vapor_quality_list = []
 
     index_throat = y_coord_avec_canaux.index(min(y_coord_avec_canaux))
 
@@ -110,6 +114,16 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
             # Arbitrarely create a difference to enter the loop
             new_coldwall_temp = coldwall_temp + 10
             new_hotwall_temp = hotwall_temp + 10
+
+            new_coolant_pressure = init_coolant_pressure
+            new_coolant_temp = init_coolant_temp
+
+            # if phase == 0 or phase == 2:
+            #     vapor_quality = PropsSI("Q", "P", new_coolant_pressure, "T", new_coolant_temp, fluid)
+            # elif phase == 1:
+            #     H_liq = PropsSI("H", "Q", 0, "P", new_coolant_pressure, fluid)
+            #     H_vap = PropsSI("H", "Q", 1, "P", new_coolant_pressure, fluid)
+            #     vapor_quality = (H2 - H_liq) / (H_vap - H_liq)
 
             # This loop's goal is to find sigma and the wall conductivity
             # It iterates until the wall temperatures have converged
@@ -193,7 +207,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
             dA_2 = (np.pi * D * dl) / nbc
 
             # New temperature at next point
-            delta_T_coolant = ((flux * dA_1) / ((debit_mass_coolant / nbc) * coolant_cp_list[i]))
+            delta_T_coolant = ((flux * dA_2) / ((debit_mass_coolant / nbc) * coolant_cp_list[i]))
             new_coolant_temp = coolant_temp_list[i] + delta_T_coolant
 
             # Solving Colebrook's formula to obtain the Darcy-Weisbach friction factor
@@ -202,6 +216,17 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
             # Computing pressure loss with the Darcy-Weisbach friction factor (no pressure loss taken into account)
             delta_p = 0.5 * frict_factor * (dl / Dhy) * coolant_density_list[i] * v_cool ** 2
             new_coolant_pressure = coolant_pressure_list[i] - delta_p
+
+            # if phase == 0:
+            #     H1 = PropsSI("H", "P", new_coolant_pressure, "T", new_coolant_temp, fluid)
+            #     H2 = H1 + flux / debit_mass_coolant
+            #     vapor_quality = PropsSI("Q", "H", H2, "P", new_coolant_pressure, fluid)
+            #     phase = 1 if (0 < vapor_quality < 1) else 0
+            # else:
+            #     H1 = H2
+            #     H2 = H1 + flux / debit_mass_coolant
+            #     vapor_quality = PropsSI("Q", "H", H2, "P", new_coolant_pressure, fluid)
+            #     phase = 1 if (0 < vapor_quality < 1) else 2
 
             # Computing the new properties of the ethanol (properties considered constant)
             if new_coolant_pressure < 0:
@@ -214,6 +239,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
             new_cool_sound_spd = flp.sound_speed(P=new_coolant_pressure, T=new_coolant_temp, fluid=fluid)
 
             # Store the results
+            vapor_quality_list.append(vapor_quality)
             hotgas_viscosity_list.append(hotgas_visc)
             hotgas_cp_list.append(hotgas_cp)
             hotgas_cond_list.append(hotgas_cond)
@@ -256,4 +282,4 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
                coolant_cond_list, coolant_cp_list, coolant_density_list, \
                coolant_velocity_list, coolant_pressure_list, coolant_prandtl_list, wall_cond_list, \
                sound_speed_list, hl_normal_list, rad_flux_list, rad_CO2_list, \
-               rad_H2O_list, critical_heat_flux_list, Nu_list, Nu_corr_list, Dhy_list
+               rad_H2O_list, critical_heat_flux_list, Nu_list, Nu_corr_list, Dhy_list, vapor_quality_list
