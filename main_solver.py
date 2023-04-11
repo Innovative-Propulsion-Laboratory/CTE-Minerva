@@ -91,11 +91,9 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
                                                                                       molar_mass,
                                                                                       gamma_list[i])
 
-            critical_heat_flux = t.compute_chf(coolant_pressure_list[i],
-                                               coolant_temp_list[i],
-                                               coolant_velocity_list[i],
-                                               coolant_density_list[i],
-                                               coolant_reynolds_list[i])
+            critical_heat_flux = t.compute_chf_2(P_SI=coolant_pressure_list[i],
+                                                 T_bulk_SI=coolant_temp_list[i],
+                                                 V_SI=coolant_velocity_list[i])
 
             # If last point in the list
             if i == nb_points_channel - 1:

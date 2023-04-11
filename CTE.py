@@ -45,7 +45,7 @@ input_CEA_data = "input/Minerva_project.txt"  # Minerva's parameters (found with
 # Constant input_data_list
 size2 = 16  # Used for the height of the display in 3D view
 limitation = 0.05  # used to build the scales in 3D view
-figure_dpi = 300  # Dots Per Inch (DPI) for all figures (lower=faster)
+figure_dpi = 150  # Dots Per Inch (DPI) for all figures (lower=faster)
 plot_detail = 3  # 0=No plots; 1=Important plots; 3=All plots
 show_plots = True
 save_plots = False
@@ -203,16 +203,16 @@ nbc = 42  # Number of channels
 manifold_pos = 0.104  # Position of the manifold from the throat (in m)
 
 # Widths
-lrg_inj = 0.0025  # Width of the channel in at the injection plate (in m)
-lrg_conv = 0.0015  # Width of the channel at the end of the cylindrical chamber (in m)
-lrg_col = 0.0015  # Width of the channel in the throat (in m)
-lrg_tore = 0.0015  # Width of the channel at the manifold (in m)
+lrg_inj = 0.003  # Width of the channel in at the injection plate (in m)
+lrg_conv = 0.002  # Width of the channel at the end of the cylindrical chamber (in m)
+lrg_col = 0.002  # Width of the channel in the throat (in m)
+lrg_tore = 0.002  # Width of the channel at the manifold (in m)
 
 # Heights
-ht_inj = 0.0025  # Height of the channel at the injection plate (in m)
-ht_conv = 0.0015  # Height of the channel at the end of the cylindrical chamber (in m)
+ht_inj = 0.003  # Height of the channel at the injection plate (in m)
+ht_conv = 0.002  # Height of the channel at the end of the cylindrical chamber (in m)
 ht_col = 0.0015  # Height of the channel in the throat (in m)
-ht_tore = 0.0015  # Height of the channel at the manifold (in m)
+ht_tore = 0.002  # Height of the channel at the manifold (in m)
 
 # Thickness
 e_conv = 0.001  # Thickness of the wall at the chamber (in m)
@@ -255,7 +255,7 @@ coeffs = (n1, n2, n3, n4, n5, n6)
 # Compute dimensions
 xcanaux, ycanaux, larg_canal, larg_ailette_list, ht_canal, wall_thickness, \
 area_channel, nb_points_channel, y_coord_avec_canaux \
-    = canaux_library(profile, widths, heights, thicknesses, coeffs, manifold_pos,
+    = canaux(profile, widths, heights, thicknesses, coeffs, manifold_pos,
              debit_volumique_total_cool, nbc, plot_detail, write_in_csv, figure_dpi)
 
 # Write the dimensions of the channels in a CSV file
@@ -286,7 +286,6 @@ wall_thickness.reverse()
 xcanaux.reverse()
 larg_canal.reverse()
 area_channel.reverse()
-larg_ailette_list.reverse()
 ht_canal.reverse()
 ycanaux.reverse()
 y_coord_avec_canaux.reverse()
@@ -329,8 +328,9 @@ hotgas_prandtl_list, hg_list, hotwall_temp_list, coldwall_temp_list, total_flux_
 sigma_list, coolant_reynolds_list, coolant_temp_list, coolant_viscosity_list, \
 coolant_cond_list, coolant_cp_list, coolant_density_list, coolant_velocity_list, \
 coolant_pressure_list, coolant_prandtl_list, wallcond_list, sound_speed_coolant_list, hlnormal_list, \
-rad_flux_list, rad_CO2_list, rad_H2O_list, critical_heat_flux_list, Nu_list, Nu_corr_list, Dhy_list, vapor_quality_list \
-    = mainsolver(data_hotgas, data_coolant, data_channel, data_chamber, chen=False)
+rad_flux_list, rad_CO2_list, rad_H2O_list, critical_heat_flux_list, Nu_list, Nu_corr_list, Dhy_list, \
+vapor_quality_list \
+    = mainsolver(data_hotgas, data_coolant, data_channel, data_chamber, chen=True)
 
 end_m = time.perf_counter()  # End of the main solution timer
 time_elapsed = f"{round(end_m - start_main_time, 2)}"  # Main computation elapsed time (in s)
