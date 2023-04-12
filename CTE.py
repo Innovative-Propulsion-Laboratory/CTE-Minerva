@@ -237,7 +237,7 @@ elif material == 2:
 
 # %% Properties of the coolant
 fluid = "Ethanol"
-Temp_cool_init = 352  # Initial temperature of the coolant (in K)
+Temp_cool_init = 300  # Initial temperature of the coolant (in K)
 Pressure_cool_init = 2700000  # Pressure of the coolant at inlet (in Pa)
 density_cool_init = PropsSI("D", "T", Temp_cool_init, "P", Pressure_cool_init,
                             fluid)  # Density of the ethanol (in kg/m^3)
