@@ -24,7 +24,7 @@ def plotter(parameters, data):
     coolant_velocity_list, wallcond_list, material_name, hg_list, coolant_density_list, rad_CO2_list, \
     rad_H2O_list, rad_flux_list, hotgas_visc_list, hotgas_cp_list, hotgas_cond_list, \
     hotgas_prandtl_list, sigma_list, coolant_reynolds_list, coolant_cond_list, coolant_cp_list, \
-    coolant_viscosity_list, coolant_prandtl_list, newyhtre, verification, vapor_quality = data
+    coolant_viscosity_list, coolant_prandtl_list, newyhtre, verification, vapor_quality, Dhy_list = data
 
     # Plot of the profile of the engine
     if plot_detail >= 3:
@@ -141,6 +141,12 @@ def plotter(parameters, data):
                               xlabel=r'x-coordinate [$mm$]',
                               ylabel=r'Length [mm]', ymin=0, xmin=-200, dpi=figure_dpi, show=show))
 
+        figs.append(t.one_plot(x_coord_list_mm, np.array(Dhy_list) * 1000,
+                               title=r'Channel hydraulic diameter',
+                               xlabel=r'x-coordinate [$mm$]',
+                               ylabel=r'$D_{hy}$ [$mm$]',
+                               ymin=0, xmin=-200, dpi=figure_dpi, show=show))
+
         figs.append(t.one_plot(x_coord_list_mm, np.array(wall_thickness) * 1000,
                                title=r'Chamber wall thickness',
                                xlabel=r'x-coordinate [$mm$]',
@@ -156,9 +162,9 @@ def plotter(parameters, data):
 
     if plot_detail >= 1:
         figs.append(t.n_plots(x_coord_list_mm,
-                              y_list=[np.array(hlnormal_list) * 1000,
-                                      np.array(hlcor_list) * 1000,
-                                      np.array(hlcor_list_2) * 1000],
+                              y_list=[np.array(hlnormal_list),
+                                      np.array(hlcor_list),
+                                      np.array(hlcor_list_2)],
                               y_label_list=['No correction', 'Correction 1 (P. Pempie)',
                                             'Correction 2 (Popp & Schmidt)'],
                               colors_list=['b', 'r', 'g'],
@@ -198,9 +204,9 @@ def plotter(parameters, data):
 
         mach_03 = [x * 0.3 for x in sound_speed_coolant_list]
         figs.append(t.n_plots(x_coord_list_mm,
-                              y_list=[coolant_velocity_list, mach_03],
-                              y_label_list=['Coolant', 'Mach 0.3 limit'],
-                              colors_list=['b', 'k'],
+                              y_list=[coolant_velocity_list],
+                              y_label_list=['Coolant'],
+                              colors_list=['b'],
                               title=r'Coolant velocity',
                               xlabel=r'x-coordinate [$mm$]',
                               ylabel=r'$V_l$ [$m/s$]', xmin=-200, dpi=figure_dpi, show=show))

@@ -125,7 +125,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
 
             # This loop's goal is to find sigma and the wall conductivity
             # It iterates until the wall temperatures have converged
-            while abs(new_coldwall_temp - coldwall_temp) > 0.1 and abs(new_hotwall_temp - hotwall_temp) > 0.1:
+            while abs(new_coldwall_temp - coldwall_temp) > 1. and abs(new_hotwall_temp - hotwall_temp) > 1.:
                 coldwall_temp = new_coldwall_temp
                 hotwall_temp = new_hotwall_temp
 
