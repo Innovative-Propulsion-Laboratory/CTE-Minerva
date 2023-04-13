@@ -47,13 +47,13 @@ size2 = 16  # Used for the height of the display in 3D view
 limitation = 0.05  # used to build the scales in 3D view
 figure_dpi = 150  # Dots Per Inch (DPI) for all figures (lower=faster)
 plot_detail = 3  # 0=No plots; 1=Important plots; 3=All plots
-show_plots = False
-save_plots = True
+show_plots = True
+save_plots = False
 show_3d_plots = False
-show_2D_temperature = True
+show_2D_temperature = False
 do_final_3d_plot = False
 write_in_csv = True
-use_chen = True
+use_chen = False
 
 # %% Reading input data
 input_data_reader = csv.reader(open(input_CEA_data, "r"))

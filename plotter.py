@@ -26,66 +26,67 @@ def plotter(parameters, data):
     hotgas_prandtl_list, sigma_list, coolant_reynolds_list, coolant_cond_list, coolant_cp_list, \
     coolant_viscosity_list, coolant_prandtl_list, newyhtre, verification, vapor_quality, Dhy_list = data
 
-    # Plot of the profile of the engine
     if plot_detail >= 3:
+        # Plot of the profile of the engine
         figs.append(t.one_plot(x_coord_list_mm, y_coord_list_mm,
                                ylabel='Radius [mm]',
                                xlabel='x-coordinate [mm]',
                                title='Profile of the Minerva engine',
                                equal_axes=True, ymin=0, ymax=100, xmin=-200, dpi=figure_dpi, show=show))
 
-    # Computation and plot of the mesh density of the engine
-    if plot_detail >= 3 and show_3d_plots:
-        dist_between_pts = [abs(x_coord_list[i] - x_coord_list[i + 1]) for i in range(0, len(x_coord_list) - 1)]
-        dist_between_pts.append(dist_between_pts[-1])
-        colormap = plt.cm.binary
-        inv = 1, 1, 1  # 1 means should be reversed
-        view3d(inv, x_coord_list, y_coord_list, dist_between_pts, colormap, 'Mesh density (in m)', size2,
+        # Computation and plot of the mesh density of the engine
+        if show_3d_plots:
+            dist_between_pts = [abs(x_coord_list[i] - x_coord_list[i + 1]) for i in range(0, len(x_coord_list) - 1)]
+            dist_between_pts.append(dist_between_pts[-1])
+            colormap = plt.cm.binary
+            inv = 1, 1, 1  # 1 means should be reversed
+            view3d(inv, x_coord_list, y_coord_list, dist_between_pts, colormap, 'Mesh density (in m)', size2,
                limitation, show=show)
 
-    # Plots of the cross-sectionnal areas
-    if plot_detail >= 3:
+        # Plots of the cross-sectionnal areas
         figs.append(t.one_plot(x_coord_list_mm, cross_section_area_list,
                                title='Cross-sectional area inside the engine',
                                xlabel=r'x-coordinate [$mm$]',
                                ylabel=r'Area [$m^2$]', ymin=0, ymax=0.018, xmin=-200, dpi=figure_dpi, show=show))
 
-    # Plot of the gamma linearisation
-    if plot_detail >= 3:
+        # Plot of the gamma linearisation
         figs.append(t.one_plot(x_coord_list_mm, gamma_list,
                                title=r'Adiabatic constant $\gamma$ of the combustion gases',
                                xlabel=r'x-coordinate [$mm$]',
                                ylabel=r'$\gamma$ [-]', xmin=-200, dpi=figure_dpi, show=show))
 
-    # Plots of the Mach number in the engine (2D/3D)
     if plot_detail >= 1:
+        # Plot of the Mach number in the engine (2D)
         figs.append(t.one_plot(x_coord_list_mm, mach_list,
                                title=r'Mach number',
                                xlabel=r'x-coordinate [$mm$]',
                                ylabel=r'$Ma$ [-]', ymin=0, xmin=-200, dpi=figure_dpi, show=show))
 
-    if plot_detail >= 2 and show_3d_plots:
-        colormap = plt.cm.Spectral
-        inv = 1, 1, 1  # 1 means should be reversed
-        view3d(inv, x_coord_list, y_coord_list, mach_list,
+    if plot_detail >= 2:
+        # Plot of the Mach number in the engine (3D)
+        if show_3d_plots :
+            colormap = plt.cm.Spectral
+            inv = 1, 1, 1  # 1 means should be reversed
+            view3d(inv, x_coord_list, y_coord_list, mach_list,
                colormap, 'Mach number of hot gases', size2, limitation, show=show)
 
-    # Plot of the static pressure (2D/3D)
-    if plot_detail >= 2:
+        # Plot of the static pressure (2D)
         figs.append(t.one_plot(x_coord_list_mm, pressure_list,
                                title=r'Static pressure',
                                xlabel=r'x-coordinate [$mm$]',
                                ylabel=r'$P$ [Pa]', ymin=0, xmin=-200, dpi=figure_dpi, show=show))
 
-    if plot_detail >= 2 and show_3d_plots:
-        colormap = plt.cm.gist_rainbow_r
-        inv = 1, 1, 1  # 1 means should be reversed
-        view3d(inv, x_coord_list, y_coord_list, pressure_list,
+        # Plot of the static pressure (3D)
+        if show_3d_plots:
+            colormap = plt.cm.gist_rainbow_r
+            inv = 1, 1, 1  # 1 means should be reversed
+            view3d(inv, x_coord_list, y_coord_list, pressure_list,
                colormap, 'Static pressure (in Pa)', size2,
                limitation, show=show)
 
-    # Plots of molar fraction and partial pressure
+    
     if plot_detail >= 3:
+        # Plot of molar fraction 
         figs.append(t.n_plots(x_coord_list_mm,
                               y_list=[Molfrac_H2O, Molfrac_CO2],
                               y_label_list=[r'$H_2O$', r'$CO_2$'],
@@ -95,6 +96,7 @@ def plotter(parameters, data):
                               ylabel=r'Molar fraction $x_i$ [-]',
                               ymin=0, xmin=-200, dpi=figure_dpi, show=show))
 
+        # Plot of partial pressure
         figs.append(t.n_plots(x_coord_list_mm,
                               y_list=[partial_p_H2O_list, partial_p_CO2_list],
                               y_label_list=[r'$H_2O$', r'$CO_2$'],
@@ -104,8 +106,8 @@ def plotter(parameters, data):
                               ylabel=r'Partial pressure $p_i$ [Pa]',
                               ymin=0, xmin=-200, dpi=figure_dpi, show=show, sci_notation=True))
 
-    # Plots of the temperature in the engine (2D/3D)
     if plot_detail >= 1:
+        # Plot of the temperature in the engine (2D/3D)
         figs.append(t.n_plots(x_coord_list_mm,
                               y_list=[static_hotgas_temp_list, recovery_hotgas_temp_list, total_hotgas_temp_list],
                               y_label_list=[r'Static temperature $T_s$',
@@ -124,10 +126,10 @@ def plotter(parameters, data):
                                ymax=max(recovery_hotgas_temp_list) + 30,
                                xmin=-200, dpi=figure_dpi, show=show))
 
-    if plot_detail >= 2 and show_3d_plots:
-        colormap = plt.cm.coolwarm
-        inv = 1, 1, 1  # 1 means should be reversed
-        view3d(inv, x_coord_list, y_coord_list, recovery_hotgas_temp_list,
+        if show_3d_plots:
+            colormap = plt.cm.coolwarm
+            inv = 1, 1, 1  # 1 means should be reversed
+            view3d(inv, x_coord_list, y_coord_list, recovery_hotgas_temp_list,
                colormap, 'Temperature of the hot gas (in K)', size2, limitation, show=show)
 
     if plot_detail >= 3:
@@ -160,7 +162,6 @@ def plotter(parameters, data):
                                ylabel=r'Area [$m^2$]', sci_notation=True,
                                ymin=0, xmin=-200, dpi=figure_dpi, show=show))
 
-    if plot_detail >= 1:
         figs.append(t.n_plots(x_coord_list_mm,
                               y_list=[np.array(hlnormal_list),
                                       np.array(hlcor_list),
