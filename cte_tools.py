@@ -132,7 +132,18 @@ def darcy_weisbach(Dhy, Re, roughness):
     return friction_factor_2
 
 
-def compute_chf(P_SI, T_SI, V_SI, rho_SI, Re):
+def compute_chf_2(V_SI, T_bulk_SI, P_SI):
+    T_bulk_IMP = (T_bulk_SI - 273.15) * (9. / 5.) + 32
+    T_sat_SI = PropsSI('T', 'P', P_SI, 'Q', 1, 'Ethanol')
+    T_sat_IMP = (T_sat_SI - 273.15) * (9. / 5.) + 32
+    delta_T = T_sat_IMP - T_bulk_IMP if T_sat_IMP - T_bulk_IMP > 0 else 0
+    V_IMP = V_SI * 3.28084
+    CHF_IMP = 0.1003 + 0.05264 + np.sqrt(V_IMP * delta_T)
+    CHF_SI = 1634246 * CHF_IMP
+    return CHF_SI
+
+
+def compute_chf_1(P_SI, T_SI, V_SI, rho_SI, Re):
     """
     Critical Heat Flux for a water/ethanol mixture using NASA/TMB1998-206612
     """
@@ -184,7 +195,7 @@ def chen_correlation(Re_l, Pr_l, Dhy, cp_l, density_l, cond_l,
     H_fg_SI = H_vap - H_liq
     density_g = PropsSI('D', 'P', P_l, 'Q', 1, 'Ethanol')
     T_sat = PropsSI('T', 'P', P_l, 'Q', 1, 'Ethanol')
-    P_sat = PropsSI('P', 'T', T_wall, 'Q', 0, 'Ethanol')
+    P_sat = PropsSI('P', 'T', T_l, 'Q', 1, 'Ethanol')
 
     delta_T = T_wall - T_sat
     delta_P = P_sat - P_l

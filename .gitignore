@@ -136,3 +136,5 @@ geometry2.csv
 *.prof
 *.zip
 *.csv
+output/graphs.pdf
+output/graphs.pdf

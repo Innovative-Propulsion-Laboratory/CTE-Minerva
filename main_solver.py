@@ -91,11 +91,11 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
                                                                                       molar_mass,
                                                                                       gamma_list[i])
 
-            critical_heat_flux = t.compute_chf(coolant_pressure_list[i],
-                                               coolant_temp_list[i],
-                                               coolant_velocity_list[i],
-                                               coolant_density_list[i],
-                                               coolant_reynolds_list[i])
+            critical_heat_flux = t.compute_chf_1(P_SI=coolant_pressure_list[i],
+                                                 T_SI=coolant_temp_list[i],
+                                                 V_SI=coolant_velocity_list[i],
+                                                 rho_SI=coolant_density_list[i],
+                                                 Re=Re_cool)
 
             # If last point in the list
             if i == nb_points_channel - 1:
@@ -127,7 +127,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
 
             # This loop's goal is to find sigma and the wall conductivity
             # It iterates until the wall temperatures have converged
-            while abs(new_coldwall_temp - coldwall_temp) > 0.1 and abs(new_hotwall_temp - hotwall_temp) > 0.1:
+            while abs(new_coldwall_temp - coldwall_temp) > .2 and abs(new_hotwall_temp - hotwall_temp) > .2:
                 coldwall_temp = new_coldwall_temp
                 hotwall_temp = new_hotwall_temp
 
