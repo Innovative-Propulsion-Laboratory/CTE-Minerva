@@ -6,7 +6,6 @@ Created on Sat Dec 19 21:46:19 2020
 """
 import numpy as np
 import csv
-import matplotlib.pyplot as plt
 from scipy.interpolate import PchipInterpolator
 
 
@@ -120,13 +119,7 @@ def canaux(profile_data, width_data, height_data, thickness_data, coefficients,
         aug = (y_tore - r) / (y_tore - y_col)
         htr_x = ((1 - aug) ** n4) * (r - y_col) * acc + ht_col
         ht_canal.append(htr_x)
-    """
-    for zz in larg_canal:
-     #A supprimer
-        x=xcanaux[larg_canal.index(zz)]
-        z2=zz+0.5*zz*sin(x*1000/4)
-        larg_canal[larg_canal.index(zz)]=z2 
-    """
+
     area_channel = []  # Area of a channel as a function of the engine axis (m²)
     vitesse_coolant = []  # Velocity of coolant in a channel as a function of the engine axis (m/s)
     for i in range(0, len(larg_canal)):
@@ -160,7 +153,7 @@ def canaux(profile_data, width_data, height_data, thickness_data, coefficients,
         file.close()
 
     return xcanaux, ycanaux, larg_canal, larg_ailette, ht_canal, wall_thickness, area_channel, longc, \
-           y_coord_avec_canaux
+           y_coord_avec_canaux, vitesse_coolant
 
 
 def canaux_library(profile_data, width_data, height_data, thickness_data, coefficients,
@@ -209,14 +202,6 @@ def canaux_library(profile_data, width_data, height_data, thickness_data, coeffi
         """
         ycanaux.append(y_coord_avec_canaux[i] + wall_thickness[i] / vect)
 
-    veritas = []
-    for i in range(0, longc):
-        verifepe = (((ycanaux[i] - y_value[i]) ** 2) - (
-                np.sin(np.deg2rad(angulaire[i])) * (ycanaux[i] - y_value[i])) ** 2) ** 0.5
-        veritas.append(verifepe)
-
-    debit_volumique_canal = debit_volumique_total_cool / nbc  # Volumic flow rate in a channel
-
     y_l = [lrg_inj, lrg_conv, lrg_col, lrg_tore]
     larg_canal = [x for x in PchipInterpolator(x_interpolate, y_l)(xcanaux)]  # Width of a channel as a function of the engine axis (in m)
     larg_ailette = [(ycanaux[i] * 2 * np.pi / nbc) - larg_canal[i] for i in range(0, longc)]  # Width of a rib as a function of the engine axis (in m)
@@ -226,6 +211,7 @@ def canaux_library(profile_data, width_data, height_data, thickness_data, coeffi
 
     area_channel = []  # Area of a channel as a function of the engine axis (m²)
     vitesse_coolant = []  # Velocity of coolant in a channel as a function of the engine axis (m/s)
+    debit_volumique_canal = debit_volumique_total_cool / nbc  # Volumic flow rate in a channel
     for i in range(0, longc):
         aire = larg_canal[i] * ht_canal[i]
         area_channel.append(aire)
@@ -256,5 +242,5 @@ def canaux_library(profile_data, width_data, height_data, thickness_data, coeffi
         writer.writerow(["End"])
         file.close()
 
-    return xcanaux, ycanaux, larg_canal, larg_ailette, ht_canal, wall_thickness, area_channel, longc, y_coord_avec_canaux
+    return xcanaux, ycanaux, larg_canal, larg_ailette, ht_canal, wall_thickness, area_channel, longc, y_coord_avec_canaux, vitesse_coolant
 
