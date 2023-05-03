@@ -240,9 +240,6 @@ elif material == 2:
 fluid = "Ethanol"
 Temp_cool_init = 300  # Initial temperature of the coolant (in K)
 Pressure_cool_init = 2700000  # Pressure of the coolant at inlet (in Pa)
-density_cool_init = PropsSI("D", "T", Temp_cool_init, "P", Pressure_cool_init,
-                            fluid)  # Density of the ethanol (in kg/m^3)
-debit_volumique_total_cool = debit_mass_coolant / density_cool_init  # Total volumic flow rate of the coolant (in m^3/s)
 roughness = 50e-6  # Roughness (m)
 
 # %% Computation of channel geometry
@@ -255,19 +252,19 @@ coeffs = (n1, n2, n3, n4, n5, n6)
 
 # Compute dimensions
 xcanaux, ycanaux, larg_canal, larg_ailette_list, ht_canal, wall_thickness, \
-area_channel, nb_points_channel, y_coord_avec_canaux, vitesse_coolant \
+area_channel, nb_points_channel, y_coord_avec_canaux \
     = canaux_library(profile, widths, heights, thicknesses, coeffs, manifold_pos,
-             debit_volumique_total_cool, nbc, plot_detail, write_in_csv, figure_dpi)
+             nbc, plot_detail, write_in_csv, figure_dpi)
 
 # Write the dimensions of the channels in a CSV file
 file_name = "output/channelvalue.csv"
 with open(file_name, "w", newline="") as file:
     writer = csv.writer(file)
     writer.writerow(("Engine x", "Engine y", "y coolant wall", "Channel width", "Rib width",
-                     "Channel height", "Chamber wall thickness", "Channel area", "Coolant velocity"))
+                     "Channel height", "Chamber wall thickness", "Channel area"))
     for i in range(0, nb_points_channel):
         writer.writerow((xcanaux[i], y_coord_avec_canaux[i], ycanaux[i], larg_canal[i], larg_ailette_list[i],
-                         ht_canal[i], wall_thickness[i], area_channel[i], vitesse_coolant[i]))
+                         ht_canal[i], wall_thickness[i], area_channel[i]))
 
 end_init_time = time.perf_counter()  # End of the initialisation timer
 time_elapsed = f"{round(end_init_time - start_time, 2)}"  # Initialisation elapsed time (in s)
@@ -507,7 +504,7 @@ data_plotter = (x_coord_list_mm, y_coord_list_mm, x_coord_list, y_coord_list, yc
                 cross_section_area_list, gamma_list, mach_list, pressure_list, Molfrac_H2O, Molfrac_CO2,
                 partial_p_H2O_list, partial_p_CO2_list, total_hotgas_temp_list, recovery_hotgas_temp_list,
                 static_hotgas_temp_list, larg_ailette_list, larg_canal, ht_canal, wall_thickness, area_channel, 
-                vitesse_coolant, hlnormal_list, hlcor_list, hlcor_list_2, hotwall_temp_list, coldwall_temp_list, 
+                hlnormal_list, hlcor_list, hlcor_list_2, hotwall_temp_list, coldwall_temp_list, 
                 total_flux_list, critical_heat_flux_list, coolant_temp_list, coolant_pressure_list, 
                 sound_speed_coolant_list, coolant_velocity_list, wallcond_list, material_name, hg_list, coolant_density_list, 
                 rad_CO2_list, rad_H2O_list, rad_flux_list, hotgas_visc_list, hotgas_cp_list, hotgas_cond_list,
@@ -550,7 +547,6 @@ if write_in_csv:
          "Channel width [mm]",
          "Channel height [mm]",
          "Channel area [m²]",
-         "Coolant velocity [m/s]"
          "Hydraulic diameter [mm]",
 
          "Gas viscosity [µPa.s]",
@@ -607,7 +603,6 @@ if write_in_csv:
                                         larg_canal[i] * 1000,
                                         ht_canal[i] * 1000,
                                         area_channel[i],
-                                        vitesse_coolant[i],
                                         Dhy_list[i] * 1000,
 
                                         hotgas_visc_list[i] * 1e6,

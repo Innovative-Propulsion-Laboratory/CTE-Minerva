@@ -57,7 +57,7 @@ def plotter(parameters, data):
     cross_section_area_list, gamma_list, mach_list, pressure_list, Molfrac_H2O, Molfrac_CO2, \
     partial_p_H2O_list, partial_p_CO2_list, total_hotgas_temp_list, recovery_hotgas_temp_list, \
     static_hotgas_temp_list, larg_ailette_list, larg_canal, ht_canal, wall_thickness, area_channel, \
-    vitesse_coolant, hlnormal_list, hlcor_list, hlcor_list_2, hotwall_temp_list, coldwall_temp_list, total_flux_list, \
+    hlnormal_list, hlcor_list, hlcor_list_2, hotwall_temp_list, coldwall_temp_list, total_flux_list, \
     critical_heat_flux_list, coolant_temp_list, coolant_pressure_list, sound_speed_coolant_list, \
     coolant_velocity_list, wallcond_list, material_name, hg_list, coolant_density_list, rad_CO2_list, \
     rad_H2O_list, rad_flux_list, hotgas_visc_list, hotgas_cp_list, hotgas_cond_list, \
@@ -206,11 +206,6 @@ def plotter(parameters, data):
                                ylabel=r'Wall thickness $t$ [$mm$]',
                                ymin=0, ymax=2, xmin=-200, dpi=figure_dpi, show=show))
 
-        figs.append(t.one_plot(x_coord_list_mm, np.array(vitesse_coolant),
-                               title=r'Coolant velocity',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'Velocity [$m/s$]',
-                               ymin=0, ymax=50, xmin=-200, dpi=figure_dpi, show=show))
 
     if plot_detail >= 1:
         if sh_chanel_area :

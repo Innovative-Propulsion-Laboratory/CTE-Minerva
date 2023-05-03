@@ -10,7 +10,7 @@ from scipy.interpolate import PchipInterpolator
 
 
 def canaux(profile_data, width_data, height_data, thickness_data, coefficients,
-           tore_pos, debit_volumique_total_cool, nbc, plot_detail, write_in_csv, figure_dpi):
+           tore_pos, nbc, plot_detail, write_in_csv, figure_dpi):
     """
     This function computes the caracteristics of channels on each point
     by interpolation between given values at injection plate (inj), end of cylindrical chamber (conv), 
@@ -72,7 +72,6 @@ def canaux(profile_data, width_data, height_data, thickness_data, coefficients,
                 np.sin(np.deg2rad(angulaire[i])) * (ycanaux[i] - y_value[i])) ** 2) ** 0.5
         veritas.append(verifepe)
 
-    debit_volumique_canal = debit_volumique_total_cool / nbc  # Volumic flow rate in a channel
     y_col = ycanaux[pos_col]  # y coordonate of the cold wall at the throat
     y_inj = ycanaux[0]  # y coordonate of the cold wall at the injection plate
     y_tore = ycanaux[-1]  # y coordonate of the cold wall at the manifold
@@ -120,13 +119,7 @@ def canaux(profile_data, width_data, height_data, thickness_data, coefficients,
         htr_x = ((1 - aug) ** n4) * (r - y_col) * acc + ht_col
         ht_canal.append(htr_x)
 
-    area_channel = []  # Area of a channel as a function of the engine axis (m²)
-    vitesse_coolant = []  # Velocity of coolant in a channel as a function of the engine axis (m/s)
-    for i in range(0, len(larg_canal)):
-        aire = larg_canal[i] * ht_canal[i]
-        area_channel.append(aire)
-        v = debit_volumique_canal / aire
-        vitesse_coolant.append(v)
+    area_channel = [larg_canal[i] * ht_canal[i] for i in range(0, longc)]  # Area of a channel as a function of the engine axis (m²)
 
     if write_in_csv:
         "Writing the results of the study in a CSV file"
@@ -153,11 +146,11 @@ def canaux(profile_data, width_data, height_data, thickness_data, coefficients,
         file.close()
 
     return xcanaux, ycanaux, larg_canal, larg_ailette, ht_canal, wall_thickness, area_channel, longc, \
-           y_coord_avec_canaux, vitesse_coolant
+           y_coord_avec_canaux
 
 
 def canaux_library(profile_data, width_data, height_data, thickness_data, coefficients,
-           tore_pos, debit_volumique_total_cool, nbc, plot_detail, write_in_csv, figure_dpi):
+           tore_pos, nbc, plot_detail, write_in_csv, figure_dpi):
     """
     This function computes the caracteristics of channels on each point
     by interpolation between given values at injection plate (inj), end of cylindrical chamber (conv), 
@@ -209,14 +202,7 @@ def canaux_library(profile_data, width_data, height_data, thickness_data, coeffi
     y_h = [ht_inj, ht_conv, ht_col, ht_tore]
     ht_canal = [x for x in PchipInterpolator(x_interpolate, y_h)(xcanaux)]  # Height of a channel as a function of the engine axis (in m)
 
-    area_channel = []  # Area of a channel as a function of the engine axis (m²)
-    vitesse_coolant = []  # Velocity of coolant in a channel as a function of the engine axis (m/s)
-    debit_volumique_canal = debit_volumique_total_cool / nbc  # Volumic flow rate in a channel
-    for i in range(0, longc):
-        aire = larg_canal[i] * ht_canal[i]
-        area_channel.append(aire)
-        v = debit_volumique_canal / aire
-        vitesse_coolant.append(v)
+    area_channel = [larg_canal[i] * ht_canal[i] for i in range(0, longc)]  # Area of a channel as a function of the engine axis (m²)
 
     if write_in_csv:
         "Writing the results of the study in a CSV file"
@@ -242,5 +228,5 @@ def canaux_library(profile_data, width_data, height_data, thickness_data, coeffi
         writer.writerow(["End"])
         file.close()
 
-    return xcanaux, ycanaux, larg_canal, larg_ailette, ht_canal, wall_thickness, area_channel, longc, y_coord_avec_canaux, vitesse_coolant
+    return xcanaux, ycanaux, larg_canal, larg_ailette, ht_canal, wall_thickness, area_channel, longc, y_coord_avec_canaux
 
