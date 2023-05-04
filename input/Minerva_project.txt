@@ -2,7 +2,7 @@ c_init,1171.3
 c_col,1133.2
 debit_LOX,1.14
 debit_eth,0.815
-rho_init,1.6143
+rho_init,1.6699
 Pc,2000000
 Tc,3107.2
 gamma_c,1.1456
@@ -21,3 +21,6 @@ nCO2_c,0.11763
 nCO2_t,0.12475
 nCO2_e,0.15121
 comb_efficiency,0.7837
+rho_col,1.0296
+rho_e,0.12965
+c_e,963.4

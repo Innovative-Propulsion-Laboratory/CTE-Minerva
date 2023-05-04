@@ -11,6 +11,7 @@ import csv
 
 # Calculations
 import numpy as np
+from scipy.interpolate import PchipInterpolator
 import cte_tools as t
 from main_solver import mainsolver
 
@@ -86,6 +87,9 @@ curv_radius_after_throat = float(input_data_list[13])  # Radius of curvature aft
 area_throat = float(input_data_list[14])  # Area at the throat
 diam_throat = float(input_data_list[15])  # Throat diameter
 
+rho_c = float(input_data_list[23])  # Throat density of the gases
+rho_e = float(input_data_list[24])  # Exit density of the gases
+sound_speed_exit = float(input_data_list[25])  # Sound velocity at the exit
 # %% Import of the (X,Y) coordinates of the Minerva
 x_coords_reader = csv.reader(open(x_coords_filename, "r"))
 y_coords_reader = csv.reader(open(y_coords_filename, "r"))
@@ -99,7 +103,7 @@ x_coord_list_mm = [x * 1000 for x in x_coord_list]
 y_coord_list_mm = [y * 1000 for y in y_coord_list]
 # %% Computation of the cross-sectional area along the engine
 cross_section_area_list = [np.pi * r ** 2 for r in y_coord_list]
-# %% Adiabatic constant (gamma) parametrization
+# %% Adiabatic constant (gamma) and hotgas density computation
 print("█ Computing gamma                                                          █")
 
 i_conv = 0  # Index of the beginning of the convergent
@@ -111,31 +115,23 @@ while y1 == y2:  # Read y values two per two in order to detect the beginning of
     y2 = y_coord_list[i_conv]
 
 i_throat = y_coord_list.index(min(y_coord_list))  # Throat index
-"""
-# Gamma in the cylindrical chamber
-gamma_list = [gamma_c_input for i in range(0, i_conv)]  # Gamma is constant before the beginning of the convergent
 
-# Gamma in the convergent
-gamma_convergent = gamma_c_input
-for m in range(-1, i_throat - i_conv - 1):
-    # Linear interpolation between beginning and end of convergent:
-    # (yi+1)=((y2-y1)/(x2-x1))*abs((xi+1)-(xi))
-    gamma_convergent += ((gamma_t_input - gamma_c_input) / (x_coord_list[i_throat] - x_coord_list[i_conv])) * abs(
-        x_coord_list[i_conv + 1 + m] - x_coord_list[i_conv + m])
-    gamma_list.append(gamma_convergent)
-
-# Gamma in the divergent nozzle
-gamma_divergent = gamma_t_input
-for q in range(-1, nb_points - i_throat - 1):  # Linear interpolation between beginning and end of divergent
-    gamma_divergent += ((gamma_e_input - gamma_t_input) / (x_coord_list[-1] - x_coord_list[i_throat])) * abs(
-        x_coord_list[i_throat + 1 + q] - x_coord_list[i_throat + q])
-    gamma_list.append(gamma_divergent)
-"""
 x_given = [x_coord_list[0], x_coord_list[i_conv], x_coord_list[i_throat], x_coord_list[-1]]
 gamma_given = [gamma_c_input, gamma_c_input, gamma_t_input, gamma_e_input]
 gamma_list = [x for x in np.interp(x_coord_list, x_given, gamma_given)]
 
-# %% Mach number computation
+x_given = [x_coord_list[0], x_coord_list[i_throat], x_coord_list[-1]]
+density_given = [rho_init, rho_c, rho_e]
+hotgas_density_list = [x for x in np.interp(x_coord_list, x_given, density_given)]
+hotgas_density_test = [x for x in PchipInterpolator(x_given, density_given)(x_coord_list)]
+
+plt.figure(dpi=figure_dpi)
+plt.plot(x_coord_list, hotgas_density_list, color='red')
+plt.plot(x_coord_list, hotgas_density_test, color='blue')
+plt.title('Hotgas density (in kg/m^3) as a function of engine axis')
+plt.show()
+
+# %% Mach number and velocity computation 
 "Computation of gases mach number of the hot gases (and their initial velocity)"
 
 v_init_gas = (debit_LOX + debit_mass_coolant) / (rho_init * cross_section_area_list[0])  # Initial velocity of the gases
@@ -152,6 +148,25 @@ with tqdm(total=nb_points - 1,
                                mach_gas, gamma_list[i])
         mach_list.append(mach_gas)
         progressbar.update(1)
+
+x_given = [x_coord_list[0], x_coord_list[i_throat], x_coord_list[-1]]
+sound_speed_given = [sound_speed_init, sound_speed_throat, sound_speed_exit]
+sound_speed_list = [x for x in np.interp(x_coord_list, x_given, sound_speed_given)]
+sound_speed_test = [x for x in PchipInterpolator(x_given, sound_speed_given)(x_coord_list)]
+hotgas_velocity_list = [mach_list[i] * sound_speed_list[i] for i in range(nb_points)]
+hotgas_velocity_test = [mach_list[i] * sound_speed_test[i] for i in range(nb_points)]
+
+plt.figure(dpi=figure_dpi)
+plt.plot(x_coord_list, sound_speed_list, color='red')
+plt.plot(x_coord_list, sound_speed_test, color='blue')
+plt.title('Sound velocity (in m/s) as a function of engine axis')
+plt.show()
+
+plt.figure(dpi=figure_dpi)
+plt.plot(x_coord_list, hotgas_velocity_list, color='red')
+plt.plot(x_coord_list, hotgas_velocity_test, color='blue')
+plt.title('Hotgas velocity (in m/s) as a function of engine axis')
+plt.show()
 
 # %% Static pressure computation
 pressure_list = [Pc]  # (in Pa)
