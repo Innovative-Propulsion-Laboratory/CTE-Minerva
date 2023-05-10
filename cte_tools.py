@@ -311,3 +311,19 @@ def n_plots(x, y_list,
         plt.show()
 
     return fig
+
+def film_cooling(s,slot_position=(-0.01),debit=1.955,pourcentage=(7/100),v_inf,,xcanaux,Nu_corr_list,coolant_prandtl_list,coolant_reynolds_list):
+    nfilm_list = [] #ncool dans formule
+    coolant_stanton_list = [] #St
+    v_film = [] #v cool 
+    blowing_ratio_list = [] #F 
+    position_film = [xcanaux[i] - slot_position for i in range (len(xcanaux))] #x
+    for i in range (len(position_film)) : 
+            v_film.append((pourcentage*debit)/((density(coolant_pressure_list[i],new_coolant_temp_list[i], fluid="Ethanol")*area_channel[i]))) #mdot = ro v aire
+            coolant_stanton_list.append(Nu_corr_list[i]/(coolant_reynolds_list[i]*coolant_prandtl_list[i]))
+            blowing_ratio_list.append((density(coolant_pressure_list[i],new_coolant_temp_list[i], fluid="Ethanol")*v_film[i])/(ro_infini*v_infini))
+            k1 = ((coolant_stanton_list[i]*position_film[i])/(blowing_ratio_list[i]*s))-0.04
+            k2 = coolant_reynolds_list[i]*coolant_prandtl_list[i]*(v_inf[i]/v_film[i])
+            nfilm_list.append(exp(-k1*k2**1/8))
+    return nfilm_list
+
