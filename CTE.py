@@ -51,10 +51,10 @@ plot_detail = 3  # 0=No plots; 1=Important plots; 3=All plots
 show_plots = False
 save_plots = True
 show_3d_plots = False
-show_2D_temperature = True
-do_final_3d_plot = True
+show_2D_temperature = False
+do_final_3d_plot = False
 write_in_csv = True
-use_chen = True
+use_chen = False
 
 # %% Reading input data
 input_data_reader = csv.reader(open(input_CEA_data, "r"))
@@ -330,7 +330,7 @@ partial_p_H2O_list.reverse()
 partial_p_CO2_list.reverse()
 
 # %% Main computation
-recovery_hotgas_temp_list_no_film = recovery_hotgas_temp_list_with_film
+recovery_hotgas_temp_list_no_film = recovery_hotgas_temp_list_with_film.copy()
 data_hotgas = (recovery_hotgas_temp_list_with_film, recovery_hotgas_temp_list_no_film,
                molar_mass, gamma_list, Pc, c_star, partial_p_H2O_list, partial_p_CO2_list)
 data_coolant = (Temp_cool_init, Pressure_cool_init, fluid, debit_mass_coolant)
@@ -356,7 +356,7 @@ film_length, film_temperature, index_liq_film_start, index_liq_film_end = t.film
     pourcentage=film_cooling_percentage,
     hg_coeff_list=hg_list,
     coolant_temp_list=coolant_temp_list,
-    T_aw_list=recovery_hotgas_temp_list_with_film,
+    T_aw_list=recovery_hotgas_temp_list_with_film.copy(),
     coolant_cp_list=coolant_cp_list,
     chamber_radius_list=y_coord_list,
     diam_film_holes=1e-3,
@@ -374,7 +374,7 @@ T_aw_gas_film, n_cool_gas_film = t.film_cooling_gas_hatch_papell(x_list=x_coord_
                                                                  hotgas_cp_list=hotgas_cp_list,
                                                                  hotgas_density_list=hotgas_density_list,
                                                                  T_film=film_temperature,
-                                                                 T_aw_list=recovery_hotgas_temp_list_with_film,
+                                                                 T_aw_list=recovery_hotgas_temp_list_with_film.copy(),
                                                                  engine_diam_at_gas_film_start=y_coord_list[
                                                                      index_liq_film_end],
                                                                  static_pressure=pressure_list[index_liq_film_end])
@@ -383,7 +383,6 @@ recovery_hotgas_temp_list_with_film[index_liq_film_start:index_liq_film_end + 1]
         index_liq_film_end - index_liq_film_start + 1)
 
 recovery_hotgas_temp_list_with_film[index_liq_film_end:] = T_aw_gas_film
-
 data_hotgas = (recovery_hotgas_temp_list_with_film, recovery_hotgas_temp_list_no_film,
                molar_mass, gamma_list, Pc, c_star, partial_p_H2O_list, partial_p_CO2_list)
 

@@ -56,6 +56,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
     vapor_quality = 0
     vapor_quality_list = []
     hotgas_temp_list_with_film.reverse()
+    hotgas_temp_list_no_film.reverse()
 
     index_throat = y_coord_avec_canaux.index(min(y_coord_avec_canaux))
 
@@ -179,7 +180,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
 
                 # Compute radiative heat transfer of H2O (W) and CO2 (C) (Luka Denies)
                 qW = 5.74 * ((PH2O[i] * y_coord_avec_canaux[i]) / 1e5) ** 0.3 * (
-                            hotgas_temp_list_no_film[i] / 100) ** 3.5
+                        hotgas_temp_list_no_film[i] / 100) ** 3.5
                 qC = 4 * ((PCO2[i] * y_coord_avec_canaux[i]) / 1e5) ** 0.3 * (hotgas_temp_list_no_film[i] / 100) ** 3.5
                 qRad = qW + qC
 
