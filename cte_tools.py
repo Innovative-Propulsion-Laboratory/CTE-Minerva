@@ -14,7 +14,7 @@ def mach_solv(area_1, area_2, mach_1, gamma):
         liste = []
         mach = []
         # Search of the mach_2 for which part_1 is minimum (600 iterations was ideal when tested)
-        for i in range(0, 600):
+        for i in range(0, 620):
             mach_2 += 0.00001
             part_1 = mach_2 * ((1 + (((gamma - 1) / 2) * mach_2 * mach_2)) ** (-ome))
             liste.append(abs(part_1 - part_2))
@@ -150,7 +150,7 @@ def compute_chf_1(P_SI, T_SI, V_SI, rho_SI, Re):
 
     # Mass flux
     G_SI = rho_SI * V_SI
-    G_IMP = (1 / 703.07) * G_SI  # lbm/in².s
+    G_IMP = (1 / 703.07) * G_SI  # lbm/in².slot_height
 
     # Latent heat of vaporisation
     # (http://www.coolprop.org/coolprop/HighLevelAPI.html#vapor-liquid-and-saturation-states)
@@ -180,7 +180,7 @@ def compute_chf_1(P_SI, T_SI, V_SI, rho_SI, Re):
     C = (0.216 + 0.0474 * P_MPa) * phi
 
     # Critical Heat Flux
-    CHF_IMP = G_IMP * H_fg_IMP * C * Re ** (-0.5)  # BTU/(in².s)
+    CHF_IMP = G_IMP * H_fg_IMP * C * Re ** (-0.5)  # BTU/(in².slot_height)
     CHF_SI = 1634246 * CHF_IMP  # W/m²
 
     return CHF_SI
@@ -312,18 +312,125 @@ def n_plots(x, y_list,
 
     return fig
 
-def film_cooling(s,slot_position=(-0.01),debit=1.955,pourcentage=(7/100),v_inf,,xcanaux,Nu_corr_list,coolant_prandtl_list,coolant_reynolds_list):
-    nfilm_list = [] #ncool dans formule
-    coolant_stanton_list = [] #St
-    v_film = [] #v cool 
-    blowing_ratio_list = [] #F 
-    position_film = [xcanaux[i] - slot_position for i in range (len(xcanaux))] #x
-    for i in range (len(position_film)) : 
-            v_film.append((pourcentage*debit)/((density(coolant_pressure_list[i],new_coolant_temp_list[i], fluid="Ethanol")*area_channel[i]))) #mdot = ro v aire
-            coolant_stanton_list.append(Nu_corr_list[i]/(coolant_reynolds_list[i]*coolant_prandtl_list[i]))
-            blowing_ratio_list.append((density(coolant_pressure_list[i],new_coolant_temp_list[i], fluid="Ethanol")*v_film[i])/(ro_infini*v_infini))
-            k1 = ((coolant_stanton_list[i]*position_film[i])/(blowing_ratio_list[i]*s))-0.04
-            k2 = coolant_reynolds_list[i]*coolant_prandtl_list[i]*(v_inf[i]/v_film[i])
-            nfilm_list.append(exp(-k1*k2**1/8))
-    return nfilm_list
 
+def film_cooling_gas_hatch_papell(slot_height, x_list, slot_position,
+                                  debit_total, pourcentage, hotgas_speed_list, hotgas_visc_list,
+                                  hotgas_cp_list, hotgas_density_list, hg_condcoeff_list,
+                                  T_film, T_aw_nofilm, engine_diam_at_gas_film_start, static_pressure):
+    hotgas_cp_list.reverse()
+    hotgas_visc_list.reverse()
+
+    index_start_gas_film = np.argmax(np.array(x_list) >= slot_position)
+    debit_film_total = debit_total * pourcentage
+
+    area_film_annulus = 0.25 * np.pi * (
+            engine_diam_at_gas_film_start ** 2 - (engine_diam_at_gas_film_start - slot_height) ** 2)
+    film_density = PropsSI("D", "P", static_pressure, "Q", 1, "Ethanol")
+    v_film = debit_film_total / (film_density * area_film_annulus)  # Velocity
+
+    film_momentum = film_density * v_film
+    hotgas_momentum = hotgas_speed_list[index_start_gas_film] * hotgas_density_list[index_start_gas_film]
+    blowing_ratio = film_momentum / hotgas_momentum  # F
+
+    x_film = [x - slot_position for x in x_list[index_start_gas_film:]]
+
+    coolant_visc = PropsSI("VISCOSITY", "P", static_pressure, "Q", 1, "Ethanol")
+    coolant_cp = PropsSI("CPMASS", "P", static_pressure, "Q", 1, "Ethanol")
+    coolant_cond = PropsSI("CONDUCTIVITY", "P", static_pressure, "Q", 1, "Ethanol")
+
+    Reynolds_coolant = debit_film_total * slot_height / (coolant_visc * area_film_annulus)
+    Prandtl_coolant = coolant_cp * coolant_visc / coolant_cond
+
+    hotgas_stanton_list = [hg_condcoeff_list[i] / (hotgas_density_list[i] * hotgas_speed_list[i] * hotgas_cp_list[i])
+                           for i in
+                           range(len(hg_condcoeff_list))]
+    hotgas_stanton_list = hotgas_stanton_list[index_start_gas_film:]
+    hotgas_speed_list = hotgas_speed_list[index_start_gas_film:]
+
+    n_cool_list = [(np.exp(-((hotgas_stanton_list[i] * x) / (blowing_ratio * slot_height)) * (
+            Reynolds_coolant * Prandtl_coolant * (hotgas_speed_list[i] / v_film)) ** 0.125)) for i, x in
+                   enumerate(x_film)]
+
+    T_aw_with_film = [T_aw_nofilm[i] - n_cool * (T_aw_nofilm[i] - T_film) for i, n_cool in enumerate(n_cool_list)]
+
+    return T_aw_with_film, n_cool_list
+
+
+def film_cooling_gas_lefebvre(slot_height, x_list, slot_position,
+                              debit_total, pourcentage, hotgas_speed_list, hotgas_visc_list,
+                              hotgas_cp_list, hotgas_density_list, hg_list,
+                              T_film, T_aw_nofilm, engine_diam_at_gas_film_start, static_pressure):
+    hotgas_cp_list.reverse()
+    hg_list.reverse()
+    hotgas_visc_list.reverse()
+    index_start_gas_film = np.argmax(np.array(x_list) >= slot_position)
+    debit_film_total = debit_total * pourcentage
+
+    area_film_annulus = 0.25 * np.pi * (
+            engine_diam_at_gas_film_start ** 2 - (engine_diam_at_gas_film_start - slot_height) ** 2)
+    film_density = PropsSI("D", "P", static_pressure, "Q", 1, "Ethanol")
+    v_film = debit_film_total / (film_density * area_film_annulus)  # Velocity
+    film_momentum = film_density * v_film
+    hotgas_momentum = hotgas_speed_list[index_start_gas_film] * hotgas_density_list[index_start_gas_film]
+    blowing_ratio = film_momentum / hotgas_momentum  # F
+
+    x_film = [x - slot_position for x in x_list[index_start_gas_film:]]
+
+    hotgas_visc_list = hotgas_visc_list[index_start_gas_film:]
+
+    coolant_visc = PropsSI("VISCOSITY", "P", static_pressure, "Q", 1, "Ethanol")
+    slot_reynolds = slot_height * debit_film_total / (coolant_visc * area_film_annulus)
+
+    n_cool_list = [0.6 * (x / (blowing_ratio * slot_height)) ** (-0.3) * (
+            slot_reynolds * blowing_ratio * coolant_visc / hotgas_visc_list[i]) ** 0.15 for i, x in
+                   enumerate(x_film)]
+    T_aw_with_film = [T_aw_nofilm[i] - n_cool * (T_aw_nofilm[i] - T_film) for i, n_cool in enumerate(n_cool_list)]
+
+    return n_cool_list
+
+
+def compute_film_stability_factor(Re):
+    if 0 < Re < 630:
+        film_stability_factor = -4.2286e-11 * Re ** 3 - 3.7769e-7 * Re ** 2 + 4.1000e-5 * Re + 0.99622
+    elif 630 <= Re <= 4000:
+        film_stability_factor = -7.3620e-12 * Re ** 3 + 7.9882e-8 * Re ** 2 - 3.3113e-4 * Re + 1.0383
+    else:
+        film_stability_factor = -3.8405e-05 * Re + 0.6783
+        print("Warning ! Outside defined range for film Reynolds number (0 < Re < 4000)")
+
+    return film_stability_factor
+
+
+def film_cooled_length_stechman(x_list, slot_position, debit_total, pourcentage,
+                                hg_coeff_list, coolant_temp_list, T_aw_list,
+                                coolant_cp_list, chamber_radius_list,
+                                diam_film_holes, n_holes, coolant_visc_list):
+    hg_coeff_list.reverse()
+    T_aw_list.reverse()
+    coolant_cp_list.reverse()
+    coolant_temp_list.reverse()
+    coolant_visc_list.reverse()
+
+    index_film_inj = np.argmax(np.array(x_list) > slot_position)
+    cp_film = coolant_cp_list[index_film_inj]
+    T_aw = T_aw_list[index_film_inj]
+    T_init = coolant_temp_list[index_film_inj]
+    chamber_radius = chamber_radius_list[index_film_inj]
+    perimeter = 2 * np.pi * chamber_radius
+
+    debit_film_total = debit_total * pourcentage
+    reynolds_number_film = 4 * debit_film_total / (
+            coolant_visc_list[index_film_inj] * np.pi * diam_film_holes * n_holes)
+    film_stability_factor = compute_film_stability_factor(reynolds_number_film)
+
+    T_sat = PropsSI('T', 'P', 20e5, 'Q', 0, 'Ethanol')
+    H_vap = PropsSI('H', 'P', 20e5, 'Q', 1, 'Ethanol')
+    H_liq = PropsSI('H', 'P', 20e5, 'Q', 0, 'Ethanol')
+    heat_vaporisation = H_vap - H_liq
+
+    hg = max(hg_coeff_list)
+    L = film_stability_factor * debit_film_total * (cp_film * (T_aw - T_init) + heat_vaporisation) / (
+            perimeter * hg * (T_aw - T_sat))
+    index_film_end = np.argmax(np.array(x_list) > slot_position + L)
+
+    return L, T_sat, index_film_inj, index_film_end

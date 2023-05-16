@@ -4,8 +4,7 @@ import cte_tools as t
 from volume3d import view3d
 import matplotlib.backends.backend_pdf
 
-
-#Detailed choice of graph display (if plot_detail is enough, leave true everywhere)
+# Detailed choice of graph display (if plot_detail is enough, leave true everywhere)
 sh_profile = True
 sh3D_mesh_density = True
 sh_area = True
@@ -16,7 +15,7 @@ sh_static_pressure = True
 sh3D_static_pressure = True
 sh_molar_fraction = True
 sh_partial_pressure = True
-sh_temperature = True 
+sh_temperature = True
 sh_cooling_dim = True
 sh_chanel_area = True
 sh_hl = True
@@ -66,321 +65,319 @@ def plotter(parameters, data):
 
     if plot_detail >= 3:
         # Plot of the profile of the engine
-        if sh_profile :
+        if sh_profile:
             figs.append(t.one_plot(x_coord_list_mm, y_coord_list_mm,
-                               ylabel='Radius [mm]',
-                               xlabel='x-coordinate [mm]',
-                               title='Profile of the Minerva engine',
-                               equal_axes=True, ymin=0, ymax=100, xmin=-200, dpi=figure_dpi, show=show))
+                                   ylabel='Radius [mm]',
+                                   xlabel='x-coordinate [mm]',
+                                   title='Profile of the Minerva engine',
+                                   equal_axes=True, ymin=0, ymax=100, xmin=-200, dpi=figure_dpi, show=show))
 
         # Computation and plot of the mesh density of the engine
         if show_3d_plots:
-            if sh3D_mesh_density :
+            if sh3D_mesh_density:
                 dist_between_pts = [abs(x_coord_list[i] - x_coord_list[i + 1]) for i in range(0, len(x_coord_list) - 1)]
                 dist_between_pts.append(dist_between_pts[-1])
                 colormap = plt.cm.binary
                 inv = 1, 1, 1  # 1 means should be reversed
                 view3d(inv, x_coord_list, y_coord_list, dist_between_pts, colormap, 'Mesh density (in m)', size2,
-               limitation, show=show)
+                       limitation, show=show)
 
         # Plots of the cross-sectionnal areas
-        if sh_area :
+        if sh_area:
             figs.append(t.one_plot(x_coord_list_mm, cross_section_area_list,
-                               title='Cross-sectional area inside the engine',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'Area [$m^2$]', ymin=0, ymax=0.018, xmin=-200, dpi=figure_dpi, show=show))
+                                   title='Cross-sectional area inside the engine',
+                                   xlabel=r'x-coordinate [$mm$]',
+                                   ylabel=r'Area [$m^2$]', ymin=0, ymax=0.018, xmin=-200, dpi=figure_dpi, show=show))
 
         # Plot of the gamma linearisation
-        if sh_gamma :
+        if sh_gamma:
             figs.append(t.one_plot(x_coord_list_mm, gamma_list,
-                               title=r'Adiabatic constant $\gamma$ of the combustion gases',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'$\gamma$ [-]', xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Adiabatic constant $\gamma$ of the combustion gases',
+                                   xlabel=r'x-coordinate [$mm$]',
+                                   ylabel=r'$\gamma$ [-]', xmin=-200, dpi=figure_dpi, show=show))
 
     if plot_detail >= 1:
         # Plot of the Mach number in the engine (2D)
-        if sh_mach :
+        if sh_mach:
             figs.append(t.one_plot(x_coord_list_mm, mach_list,
-                               title=r'Mach number',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'$Ma$ [-]', ymin=0, xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Mach number',
+                                   xlabel=r'x-coordinate [$mm$]',
+                                   ylabel=r'$Ma$ [-]', ymin=0, xmin=-200, dpi=figure_dpi, show=show))
 
     if plot_detail >= 2:
         # Plot of the Mach number in the engine (3D)
-        if show_3d_plots :
-            if sh3D_mach : 
+        if show_3d_plots:
+            if sh3D_mach:
                 colormap = plt.cm.Spectral
                 inv = 1, 1, 1  # 1 means should be reversed
                 view3d(inv, x_coord_list, y_coord_list, mach_list,
-               colormap, 'Mach number of hot gases', size2, limitation, show=show)
+                       colormap, 'Mach number of hot gases', size2, limitation, show=show)
 
         # Plot of the static pressure (2D)
-        if sh_static_pressure :
+        if sh_static_pressure:
             figs.append(t.one_plot(x_coord_list_mm, pressure_list,
-                               title=r'Static pressure',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'$P$ [Pa]', ymin=0, xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Static pressure',
+                                   xlabel=r'x-coordinate [$mm$]',
+                                   ylabel=r'$P$ [Pa]', ymin=0, xmin=-200, dpi=figure_dpi, show=show))
 
         # Plot of the static pressure (3D)
         if show_3d_plots:
-            if sh3D_static_pressure : 
+            if sh3D_static_pressure:
                 colormap = plt.cm.gist_rainbow_r
                 inv = 1, 1, 1  # 1 means should be reversed
                 view3d(inv, x_coord_list, y_coord_list, pressure_list,
-               colormap, 'Static pressure (in Pa)', size2,
-               limitation, show=show)
+                       colormap, 'Static pressure (in Pa)', size2,
+                       limitation, show=show)
 
-    
     if plot_detail >= 3:
         # Plot of molar fraction 
-        if sh_molar_fraction :
+        if sh_molar_fraction:
             figs.append(t.n_plots(x_coord_list_mm,
-                              y_list=[Molfrac_H2O, Molfrac_CO2],
-                              y_label_list=[r'$H_2O$', r'$CO_2$'],
-                              colors_list=['r', 'b'],
-                              title=r'Molar fraction of combustion products',
-                              xlabel=r'x-coordinate [$mm$]',
-                              ylabel=r'Molar fraction $x_i$ [-]',
-                              ymin=0, xmin=-200, dpi=figure_dpi, show=show))
+                                  y_list=[Molfrac_H2O, Molfrac_CO2],
+                                  y_label_list=[r'$H_2O$', r'$CO_2$'],
+                                  colors_list=['r', 'b'],
+                                  title=r'Molar fraction of combustion products',
+                                  xlabel=r'x-coordinate [$mm$]',
+                                  ylabel=r'Molar fraction $x_i$ [-]',
+                                  ymin=0, xmin=-200, dpi=figure_dpi, show=show))
 
         # Plot of partial pressure
-        if sh_partial_pressure :
+        if sh_partial_pressure:
             figs.append(t.n_plots(x_coord_list_mm,
-                              y_list=[partial_p_H2O_list, partial_p_CO2_list],
-                              y_label_list=[r'$H_2O$', r'$CO_2$'],
-                              colors_list=['r', 'b'],
-                              title=r'Partial pressure of combustion products',
-                              xlabel=r'x-coordinate [$mm$]',
-                              ylabel=r'Partial pressure $p_i$ [Pa]',
-                              ymin=0, xmin=-200, dpi=figure_dpi, show=show, sci_notation=True))
+                                  y_list=[partial_p_H2O_list, partial_p_CO2_list],
+                                  y_label_list=[r'$H_2O$', r'$CO_2$'],
+                                  colors_list=['r', 'b'],
+                                  title=r'Partial pressure of combustion products',
+                                  xlabel=r'x-coordinate [$mm$]',
+                                  ylabel=r'Partial pressure $p_i$ [Pa]',
+                                  ymin=0, xmin=-200, dpi=figure_dpi, show=show, sci_notation=True))
 
     if plot_detail >= 1:
         # Plot of the temperature in the engine (2D/3D)
-        if sh_temperature : 
+        if sh_temperature:
             figs.append(t.n_plots(x_coord_list_mm,
-                              y_list=[static_hotgas_temp_list, recovery_hotgas_temp_list, total_hotgas_temp_list],
-                              y_label_list=[r'Static temperature $T_s$',
-                                            r'Recovery temperature $T_{aw}$',
-                                            r'Total temperature $T_{tot}$'],
-                              colors_list=['r', 'b', 'k'],
-                              title=r'Combustion gases temperature',
-                              xlabel=r'x-coordinate [$mm$]',
-                              ylabel=r'$T$ [K]', xmin=-200, dpi=figure_dpi, show=show))
+                                  y_list=[static_hotgas_temp_list, recovery_hotgas_temp_list, total_hotgas_temp_list],
+                                  y_label_list=[r'Static temperature $T_s$',
+                                                r'Recovery temperature $T_{aw}$',
+                                                r'Total temperature $T_{tot}$'],
+                                  colors_list=['r', 'b', 'k'],
+                                  title=r'Combustion gases temperature',
+                                  xlabel=r'x-coordinate [$mm$]',
+                                  ylabel=r'$T$ [K]', xmin=-200, dpi=figure_dpi, show=show))
 
             figs.append(t.one_plot(x_coord_list_mm, recovery_hotgas_temp_list,
-                               title=r'Recovery temperature $T_{aw}$',
-                               xlabel=r'x-coordinate [$mm$]', fmt='b',
-                               ylabel=r'$T$ [K]',
-                               ymin=min(recovery_hotgas_temp_list) - 30,
-                               ymax=max(recovery_hotgas_temp_list) + 30,
-                               xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Recovery temperature $T_{aw}$',
+                                   xlabel=r'x-coordinate [$mm$]', fmt='b',
+                                   ylabel=r'$T$ [K]',
+                                   ymin=min(recovery_hotgas_temp_list) - 30,
+                                   ymax=max(recovery_hotgas_temp_list) + 30,
+                                   xmin=-200, dpi=figure_dpi, show=show))
 
         if show_3d_plots:
-            if sh_temperature :
+            if sh_temperature:
                 colormap = plt.cm.coolwarm
                 inv = 1, 1, 1  # 1 means should be reversed
                 view3d(inv, x_coord_list, y_coord_list, recovery_hotgas_temp_list,
-               colormap, 'Temperature of the hot gas (in K)', size2, limitation, show=show)
+                       colormap, 'Temperature of the hot gas (in K)', size2, limitation, show=show)
 
     if plot_detail >= 3:
-        if sh_cooling_dim : 
+        if sh_cooling_dim:
             figs.append(t.n_plots(x_coord_list_mm,
-                              y_list=[np.array(larg_ailette_list) * 1000,
-                                      np.array(larg_canal) * 1000,
-                                      np.array(ht_canal) * 1000],
-                              y_label_list=['Fin width', 'Channel width', 'Channel height'],
-                              colors_list=['b', 'r', 'g'],
-                              title='Cooling channels dimensions',
-                              xlabel=r'x-coordinate [$mm$]',
-                              ylabel=r'Length [mm]', ymin=0, xmin=-200, dpi=figure_dpi, show=show))
+                                  y_list=[np.array(larg_ailette_list) * 1000,
+                                          np.array(larg_canal) * 1000,
+                                          np.array(ht_canal) * 1000],
+                                  y_label_list=['Fin width', 'Channel width', 'Channel height'],
+                                  colors_list=['b', 'r', 'g'],
+                                  title='Cooling channels dimensions',
+                                  xlabel=r'x-coordinate [$mm$]',
+                                  ylabel=r'Length [mm]', ymin=0, xmin=-200, dpi=figure_dpi, show=show))
 
             figs.append(t.one_plot(x_coord_list_mm, np.array(Dhy_list) * 1000,
-                               title=r'Channel hydraulic diameter',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'$D_{hy}$ [$mm$]',
-                               ymin=0, xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Channel hydraulic diameter',
+                                   xlabel=r'x-coordinate [$mm$]',
+                                   ylabel=r'$D_{hy}$ [$mm$]',
+                                   ymin=0, xmin=-200, dpi=figure_dpi, show=show))
 
             figs.append(t.one_plot(x_coord_list_mm, np.array(wall_thickness) * 1000,
-                               title=r'Chamber wall thickness',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'Wall thickness $t$ [$mm$]',
-                               ymin=0, ymax=2, xmin=-200, dpi=figure_dpi, show=show))
-
+                                   title=r'Chamber wall thickness',
+                                   xlabel=r'x-coordinate [$mm$]',
+                                   ylabel=r'Wall thickness $t$ [$mm$]',
+                                   ymin=0, ymax=2, xmin=-200, dpi=figure_dpi, show=show))
 
     if plot_detail >= 1:
-        if sh_chanel_area :
+        if sh_chanel_area:
             figs.append(t.one_plot(x_coord_list_mm, area_channel,
-                               title=r'Channel cross-sectional area',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'Area [$m^2$]', sci_notation=True,
-                               ymin=0, xmin=-200, dpi=figure_dpi, show=show))
-        if sh_hl :
+                                   title=r'Channel cross-sectional area',
+                                   xlabel=r'x-coordinate [$mm$]',
+                                   ylabel=r'Area [$m^2$]', sci_notation=True,
+                                   ymin=0, xmin=-200, dpi=figure_dpi, show=show))
+        if sh_hl:
             figs.append(t.n_plots(x_coord_list_mm,
-                              y_list=[np.array(hlnormal_list),
-                                      np.array(hlcor_list),
-                                      np.array(hlcor_list_2)],
-                              y_label_list=['No correction', 'Correction 1 (P. Pempie)',
-                                            'Correction 2 (Popp & Schmidt)'],
-                              colors_list=['b', 'r', 'g'],
-                              title=r'Cold-side convective coefficient $h_l$',
-                              xlabel=r'x-coordinate [$mm$]',
-                              ylabel=r'$h_l$ [$\frac{W}{m^2 \cdot K}$]',
-                              ymin=0, xmin=-200, dpi=figure_dpi, show=show))
+                                  y_list=[np.array(hlnormal_list),
+                                          np.array(hlcor_list),
+                                          np.array(hlcor_list_2)],
+                                  y_label_list=['No correction', 'Correction 1 (P. Pempie)',
+                                                'Correction 2 (Popp & Schmidt)'],
+                                  colors_list=['b', 'r', 'g'],
+                                  title=r'Cold-side convective coefficient $h_l$',
+                                  xlabel=r'x-coordinate [$mm$]',
+                                  ylabel=r'$h_l$ [$\frac{W}{m^2 \cdot K}$]',
+                                  ymin=0, xmin=-200, dpi=figure_dpi, show=show))
 
-        if sh_temp_wall : 
+        if sh_temp_wall:
             figs.append(t.n_plots(x_coord_list_mm,
-                              y_list=[hotwall_temp_list, coldwall_temp_list],
-                              y_label_list=['Hot side', 'Cold side'],
-                              colors_list=['r', 'b'],
-                              title=r'Wall temperatures $T_{wg}$ and $T_{wl}$',
-                              xlabel=r'x-coordinate [$mm$]',
-                              ylabel=r'$T$ [K]', xmin=-200, dpi=figure_dpi, show=show))
+                                  y_list=[hotwall_temp_list, coldwall_temp_list],
+                                  y_label_list=['Hot side', 'Cold side'],
+                                  colors_list=['r', 'b'],
+                                  title=r'Wall temperatures $T_{wg}$ and $T_{wl}$',
+                                  xlabel=r'x-coordinate [$mm$]',
+                                  ylabel=r'$T$ [K]', xmin=-200, dpi=figure_dpi, show=show))
 
-        if sh_chf :
+        if sh_chf:
             figs.append(t.n_plots(x_coord_list_mm,
-                              y_list=[total_flux_list, critical_heat_flux_list],
-                              y_label_list=['Total heat flux', 'Critical Heat Flux'],
-                              colors_list=['r', 'k'],
-                              title=r'Total heat flux and CHF',
-                              xlabel=r'x-coordinate [$mm$]',
-                              ylabel=r'$\dot q$ [$\frac{W}{m^2}$]',
-                              xmin=-200, dpi=figure_dpi, show=show))
+                                  y_list=[total_flux_list, critical_heat_flux_list],
+                                  y_label_list=['Total heat flux', 'Critical Heat Flux'],
+                                  colors_list=['r', 'k'],
+                                  title=r'Total heat flux and CHF',
+                                  xlabel=r'x-coordinate [$mm$]',
+                                  ylabel=r'$\dot q$ [$\frac{W}{m^2}$]',
+                                  xmin=-200, dpi=figure_dpi, show=show))
 
         coolant_temp_list.pop()
 
-        if sh_coolant_temp :     
+        if sh_coolant_temp:
             figs.append(t.one_plot(x_coord_list_mm, coolant_temp_list,
-                               title=r'Coolant temperature',
-                               xlabel=r'x-coordinate [$mm$]', fmt='-b',
-                               ylabel=r'$T$ [K]', xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Coolant temperature',
+                                   xlabel=r'x-coordinate [$mm$]', fmt='-b',
+                                   ylabel=r'$T$ [K]', xmin=-200, dpi=figure_dpi, show=show))
 
         coolant_pressure_list.pop()
 
-        if sh_coolant_pressure :
+        if sh_coolant_pressure:
             figs.append(t.one_plot(x_coord_list_mm, coolant_pressure_list,
-                               title=r'Coolant pressure', fmt='-b',
-                               xlabel=r'x-coordinate [$mm$]', sci_notation=True,
-                               ylabel=r'$P$ [Pa]', xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Coolant pressure', fmt='-b',
+                                   xlabel=r'x-coordinate [$mm$]', sci_notation=True,
+                                   ylabel=r'$P$ [Pa]', xmin=-200, dpi=figure_dpi, show=show))
 
         mach_03 = [x * 0.3 for x in sound_speed_coolant_list]
 
-        if sh_coolant_velocity :
+        if sh_coolant_velocity:
             figs.append(t.n_plots(x_coord_list_mm,
-                              y_list=[coolant_velocity_list],
-                              y_label_list=['Coolant'],
-                              colors_list=['b'],
-                              title=r'Coolant velocity',
-                              xlabel=r'x-coordinate [$mm$]',
-                              ylabel=r'$V_l$ [$m/s$]', xmin=-200, dpi=figure_dpi, show=show))
+                                  y_list=[coolant_velocity_list],
+                                  y_label_list=['Coolant'],
+                                  colors_list=['b'],
+                                  title=r'Coolant velocity',
+                                  xlabel=r'x-coordinate [$mm$]',
+                                  ylabel=r'$V_l$ [$m/s]', xmin=-200, dpi=figure_dpi, show=show))
 
     if plot_detail >= 2:
-        if sh_wall_conductivity :
+        if sh_wall_conductivity:
             figs.append(t.one_plot(x_coord_list_mm, wallcond_list,
-                               title=f'Wall conductivity ({material_name})',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'$\lambda_w$ [$\frac{W}{m \cdot K}$]',
-                               xmin=-200, dpi=figure_dpi, show=show))
-        if sh_hg :
+                                   title=f'Wall conductivity ({material_name})',
+                                   xlabel=r'x-coordinate [$mm$]',
+                                   ylabel=r'$\lambda_w$ [$\frac{W}{m \cdot K}$]',
+                                   xmin=-200, dpi=figure_dpi, show=show))
+        if sh_hg:
             figs.append(t.one_plot(x_coord_list_mm, hg_list,
-                               title=r'Hot-side convection coefficient $h_g$',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'$P$ [Pa]', xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Hot-side convection coefficient $h_g$',
+                                   xlabel=r'x-coordinate [$mm$]',
+                                   ylabel=r'$P$ [Pa]', xmin=-200, dpi=figure_dpi, show=show))
 
             coolant_density_list.pop()
 
-        if sh_coolant_ro :
+        if sh_coolant_ro:
             figs.append(t.one_plot(x_coord_list_mm, coolant_density_list,
-                               title=r'Coolant density $\rho$',
-                               xlabel=r'x-coordinate [$mm$]', fmt='-b',
-                               ylabel=r'$\rho$ [$\frac{kg}{m^3}$]',
-                               xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Coolant density $\rho$',
+                                   xlabel=r'x-coordinate [$mm$]', fmt='-b',
+                                   ylabel=r'$\rho$ [$\frac{kg}{m^3}$]',
+                                   xmin=-200, dpi=figure_dpi, show=show))
 
-        if sh_radiative_heat_flux :
+        if sh_radiative_heat_flux:
             figs.append(t.n_plots(x_coord_list_mm,
-                              y_list=[rad_CO2_list, rad_H2O_list, rad_flux_list],
-                              y_label_list=['CO2', 'H2O', 'Total'],
-                              colors_list=['b', 'r', 'g'],
-                              title=r'Radiative heat flux',
-                              xlabel=r'x-coordinate [$mm$]',
-                              ylabel=r'$\dot q_{rad}$ [$\frac{W}{m^2}$]',
-                              ymin=0, xmin=-200, dpi=figure_dpi, show=show))
+                                  y_list=[rad_CO2_list, rad_H2O_list, rad_flux_list],
+                                  y_label_list=['CO2', 'H2O', 'Total'],
+                                  colors_list=['b', 'r', 'g'],
+                                  title=r'Radiative heat flux',
+                                  xlabel=r'x-coordinate [$mm$]',
+                                  ylabel=r'$\dot q_{rad}$ [$\frac{W}{m^2}$]',
+                                  ymin=0, xmin=-200, dpi=figure_dpi, show=show))
 
-        if sh_sigma :
+        if sh_sigma:
             figs.append(t.one_plot(x_coord_list_mm, sigma_list,
-                               title=r'Bartz equation coefficient $\sigma$',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'$\sigma$ [-]',
-                               xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Bartz equation coefficient $\sigma$',
+                                   xlabel=r'x-coordinate [$mm$]',
+                                   ylabel=r'$\sigma$ [-]',
+                                   xmin=-200, dpi=figure_dpi, show=show))
 
     if plot_detail >= 3:
-        if sh_gas_viscosity :
+        if sh_gas_viscosity:
             figs.append(t.one_plot(x_coord_list_mm, hotgas_visc_list,
-                               title=r'Gas dynamic viscosity',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'$\mu$ [$\mu Pa\cdot s$]',
-                               xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Gas dynamic viscosity',
+                                   xlabel=r'x-coordinate [$mm$]',
+                                   ylabel=r'$\mu$ [$\mu Pa\cdot s]',
+                                   xmin=-200, dpi=figure_dpi, show=show))
 
-        if sh_hotgas_cp :
+        if sh_hotgas_cp:
             figs.append(t.one_plot(x_coord_list_mm, hotgas_cp_list,
-                               title=r'Hot gas $c_p$',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'$c_p$ [$\frac{J}{K\cdot kg}$]',
-                               xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Hot gas $c_p$',
+                                   xlabel=r'x-coordinate [$mm$]',
+                                   ylabel=r'$c_p$ [$\frac{J}{K\cdot kg}$]',
+                                   xmin=-200, dpi=figure_dpi, show=show))
 
-        if sh_hotgas_conductivity :
+        if sh_hotgas_conductivity:
             figs.append(t.one_plot(x_coord_list_mm, hotgas_cond_list,
-                               title=r'Hot gas conductivity',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'$\lambda_l$ [$\frac{W}{m \cdot K}$]',
-                               xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Hot gas conductivity',
+                                   xlabel=r'x-coordinate [$mm$]',
+                                   ylabel=r'$\lambda_l$ [$\frac{W}{m \cdot K}$]',
+                                   xmin=-200, dpi=figure_dpi, show=show))
 
-        if sh_hotgas_Pr :
+        if sh_hotgas_Pr:
             figs.append(t.one_plot(x_coord_list_mm, hotgas_prandtl_list,
-                               title=r'Hot gas Prandtl number',
-                               xlabel=r'x-coordinate [$mm$]',
-                               ylabel=r'$Pr_g$ [-]',
-                               xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Hot gas Prandtl number',
+                                   xlabel=r'x-coordinate [$mm$]',
+                                   ylabel=r'$Pr_g$ [-]',
+                                   xmin=-200, dpi=figure_dpi, show=show))
 
-        if sh_coolant_Re :
+        if sh_coolant_Re:
             figs.append(t.one_plot(x_coord_list_mm, coolant_reynolds_list,
-                               title=r'Coolant Reynolds number',
-                               xlabel=r'x-coordinate [$mm$]', fmt='-b',
-                               ylabel=r'$Re_l$ [-]',
-                               xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Coolant Reynolds number',
+                                   xlabel=r'x-coordinate [$mm$]', fmt='-b',
+                                   ylabel=r'$Re_l$ [-]',
+                                   xmin=-200, dpi=figure_dpi, show=show))
 
         coolant_cond_list.pop()
 
-        if sh_coolant_conductivity :
+        if sh_coolant_conductivity:
             figs.append(t.one_plot(x_coord_list_mm, coolant_cond_list,
-                               title=r'Coolant conductivity',
-                               xlabel=r'x-coordinate [$mm$]', fmt='-b',
-                               ylabel=r'$\lambda_l$ [$\frac{W}{m \cdot K}$]',
-                               xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Coolant conductivity',
+                                   xlabel=r'x-coordinate [$mm$]', fmt='-b',
+                                   ylabel=r'$\lambda_l$ [$\frac{W}{m \cdot K}$]',
+                                   xmin=-200, dpi=figure_dpi, show=show))
 
         coolant_cp_list.pop()
 
-        if sh_coolant_cp :
+        if sh_coolant_cp:
             figs.append(t.one_plot(x_coord_list_mm, coolant_cp_list,
-                               title=r'Coolant $c_p$',
-                               xlabel=r'x-coordinate [$mm$]', fmt='-b',
-                               ylabel=r'$c_p$ [$\frac{J}{K\cdot kg}$]',
-                               xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Coolant $c_p$',
+                                   xlabel=r'x-coordinate [$mm$]', fmt='-b',
+                                   ylabel=r'$c_p$ [$\frac{J}{K\cdot kg}$]',
+                                   xmin=-200, dpi=figure_dpi, show=show))
 
         coolant_viscosity_list.pop()
 
-        if sh_coolant_viscosity :
+        if sh_coolant_viscosity:
             figs.append(t.one_plot(x_coord_list_mm, coolant_viscosity_list,
-                               title=r'Coolant dynamic viscosity',
-                               xlabel=r'x-coordinate [$mm$]', fmt='-b',
-                               ylabel=r'$\mu$ [$\mu Pa\cdot s$]',
-                               xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Coolant dynamic viscosity',
+                                   xlabel=r'x-coordinate [$mm$]', fmt='-b',
+                                   ylabel=r'$\mu$ [$\mu Pa\cdot s]',
+                                   xmin=-200, dpi=figure_dpi, show=show))
 
-        if sh_coolant_Pr :
+        if sh_coolant_Pr:
             figs.append(t.one_plot(x_coord_list_mm, coolant_prandtl_list,
-                               title=r'Coolant Prandtl number',
-                               xlabel=r'x-coordinate [$mm$]', fmt='-b',
-                               ylabel=r'$Pr_l$ [-]',
-                               xmin=-200, dpi=figure_dpi, show=show))
+                                   title=r'Coolant Prandtl number',
+                                   xlabel=r'x-coordinate [$mm$]', fmt='-b',
+                                   ylabel=r'$Pr_l$ [-]',
+                                   xmin=-200, dpi=figure_dpi, show=show))
 
     if plot_detail >= 1 and show_3d_plots:
         colormap = plt.cm.plasma
@@ -402,21 +399,21 @@ def plotter(parameters, data):
                limitation, show=show)
 
     if plot_detail >= 3:
-        if sh_geometry_channel :
+        if sh_geometry_channel:
             t.n_plots(x_coord_list_mm,
-                  y_list=[np.array(ycanaux) * 1000, np.array(newyhtre) * 1000],
-                  y_label_list=['Former height', 'New height'],
-                  colors_list=['r', 'b'], equal_axes=True,
-                  title=r'Geometrical aspect of the channels',
-                  xlabel=r'x-coordinate [$mm$]',
-                  ylabel=r'$Height$ [mm]', xmin=-200, dpi=figure_dpi, show=show)
+                      y_list=[np.array(ycanaux) * 1000, np.array(newyhtre) * 1000],
+                      y_label_list=['Former height', 'New height'],
+                      colors_list=['r', 'b'], equal_axes=True,
+                      title=r'Geometrical aspect of the channels',
+                      xlabel=r'x-coordinate [$mm$]',
+                      ylabel=r'$Height$ [mm]', xmin=-200, dpi=figure_dpi, show=show)
 
-        if sh_height_channel :
+        if sh_height_channel:
             t.one_plot(np.array(xcanaux) * 1000, verification,
-                   title=r'Generated channel height check',
-                   xlabel=r'x-coordinate [$mm$]',
-                   ylabel=r'Length [$mm$]',
-                   xmin=-200, dpi=figure_dpi, show=show)
+                       title=r'Generated channel height check',
+                       xlabel=r'x-coordinate [$mm$]',
+                       ylabel=r'Length [$mm$]',
+                       xmin=-200, dpi=figure_dpi, show=show)
 
     if plot_detail >= 1 and save:
         pdf = matplotlib.backends.backend_pdf.PdfPages("output/graphs.pdf")

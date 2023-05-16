@@ -48,24 +48,21 @@ size2 = 16  # Used for the height of the display in 3D view
 limitation = 0.05  # used to build the scales in 3D view
 figure_dpi = 150  # Dots Per Inch (DPI) for all figures (lower=faster)
 plot_detail = 3  # 0=No plots; 1=Important plots; 3=All plots
-show_plots = True
-save_plots = False
+show_plots = False
+save_plots = True
 show_3d_plots = False
-show_2D_temperature = False
-do_final_3d_plot = False
+show_2D_temperature = True
+do_final_3d_plot = True
 write_in_csv = True
-use_chen = False
+use_chen = True
 
 # %% Reading input data
 input_data_reader = csv.reader(open(input_CEA_data, "r"))
 input_data_list = [row[1] for row in input_data_reader]
 
 # Store CEA output in lists
-sound_speed_init = float(input_data_list[0])  # Sound velocity in the chamber
-sound_speed_throat = float(input_data_list[1])  # Sound velocity in the throat
-debit_LOX = float(input_data_list[2])  # LOX debit
-debit_mass_coolant = float(input_data_list[3])  # Ethanol debit
-rho_init = float(input_data_list[4])  # Initial density of the gases
+debit_LOX = float(input_data_list[2])  # LOX debit_total
+debit_mass_coolant = float(input_data_list[3])  # Ethanol debit_total
 Pc = float(input_data_list[5])  # Pressure in the chamber
 Tc = float(input_data_list[6])  # Combustion temperature
 gamma_c_input = float(input_data_list[7])  # Gamma in the chamber
@@ -81,15 +78,20 @@ xCO2_c_input = float(input_data_list[19])  # Molar fraction of the CO2 in the ch
 xCO2_t_input = float(input_data_list[20])  # Molar fraction of the CO2 in the throat
 xCO2_e_input = float(input_data_list[21])  # Molar fraction of the CO2 at the exit
 
+rho_init = float(input_data_list[4])  # Initial density of the gases
+rho_c = float(input_data_list[23])  # Throat density of the gases
+rho_e = float(input_data_list[24])  # Exit density of the gases
+
+sound_speed_init = float(input_data_list[0])  # Sound velocity in the chamber
+sound_speed_throat = float(input_data_list[1])  # Sound velocity in the throat
+sound_speed_exit = float(input_data_list[25])  # Sound velocity at the exit
+
 # Store input dimensions in lists
 curv_radius_pre_throat = float(input_data_list[12])  # Radius of curvature before the throat
 curv_radius_after_throat = float(input_data_list[13])  # Radius of curvature after the throat
 area_throat = float(input_data_list[14])  # Area at the throat
 diam_throat = float(input_data_list[15])  # Throat diameter
 
-rho_c = float(input_data_list[23])  # Throat density of the gases
-rho_e = float(input_data_list[24])  # Exit density of the gases
-sound_speed_exit = float(input_data_list[25])  # Sound velocity at the exit
 # %% Import of the (X,Y) coordinates of the Minerva
 x_coords_reader = csv.reader(open(x_coords_filename, "r"))
 y_coords_reader = csv.reader(open(y_coords_filename, "r"))
@@ -121,17 +123,8 @@ gamma_given = [gamma_c_input, gamma_c_input, gamma_t_input, gamma_e_input]
 gamma_list = [x for x in np.interp(x_coord_list, x_given, gamma_given)]
 
 x_given = [x_coord_list[0], x_coord_list[i_throat], x_coord_list[-1]]
-density_given = [rho_init, rho_c, rho_e]
-hotgas_density_list = [x for x in np.interp(x_coord_list, x_given, density_given)]
-hotgas_density_test = [x for x in PchipInterpolator(x_given, density_given)(x_coord_list)]
 
-plt.figure(dpi=figure_dpi)
-plt.plot(x_coord_list, hotgas_density_list, color='red')
-plt.plot(x_coord_list, hotgas_density_test, color='blue')
-plt.title('Hotgas density (in kg/m^3) as a function of engine axis')
-plt.show()
-
-# %% Mach number and velocity computation 
+# %% Mach number and velocity computation
 "Computation of gases mach number of the hot gases (and their initial velocity)"
 
 v_init_gas = (debit_LOX + debit_mass_coolant) / (rho_init * cross_section_area_list[0])  # Initial velocity of the gases
@@ -151,21 +144,28 @@ with tqdm(total=nb_points - 1,
 
 x_given = [x_coord_list[0], x_coord_list[i_throat], x_coord_list[-1]]
 sound_speed_given = [sound_speed_init, sound_speed_throat, sound_speed_exit]
-sound_speed_list = [x for x in np.interp(x_coord_list, x_given, sound_speed_given)]
-sound_speed_test = [x for x in PchipInterpolator(x_given, sound_speed_given)(x_coord_list)]
-hotgas_velocity_list = [mach_list[i] * sound_speed_list[i] for i in range(nb_points)]
-hotgas_velocity_test = [mach_list[i] * sound_speed_test[i] for i in range(nb_points)]
+sound_speed_hotgas_list = [x for x in np.interp(x_coord_list, x_given, sound_speed_given)]
+sound_speed_hotgas_test = [x for x in PchipInterpolator(x_given, sound_speed_given)(x_coord_list)]
+hotgas_velocity_list = [mach_list[i] * sound_speed_hotgas_list[i] for i in range(nb_points)]
+hotgas_velocity_test = [mach_list[i] * sound_speed_hotgas_test[i] for i in range(nb_points)]
+hotgas_density_list = [debit_mass_coolant / (V * cross_section_area_list[i]) for i, V in
+                       enumerate(hotgas_velocity_list)]
 
 plt.figure(dpi=figure_dpi)
-plt.plot(x_coord_list, sound_speed_list, color='red')
-plt.plot(x_coord_list, sound_speed_test, color='blue')
-plt.title('Sound velocity (in m/s) as a function of engine axis')
+plt.plot(x_coord_list, sound_speed_hotgas_list, color='red')
+plt.plot(x_coord_list, sound_speed_hotgas_test, color='blue')
+plt.title('Hotgas sound velocity (in m/s)')
 plt.show()
 
 plt.figure(dpi=figure_dpi)
 plt.plot(x_coord_list, hotgas_velocity_list, color='red')
 plt.plot(x_coord_list, hotgas_velocity_test, color='blue')
-plt.title('Hotgas velocity (in m/s) as a function of engine axis')
+plt.title('Hotgas velocity (in m/s)')
+plt.show()
+
+plt.figure(dpi=figure_dpi)
+plt.plot(x_coord_list, hotgas_density_list, color='red')
+plt.title('Hotgas density (in kg/m^3)')
 plt.show()
 
 # %% Static pressure computation
@@ -256,6 +256,8 @@ fluid = "Ethanol"
 Temp_cool_init = 300  # Initial temperature of the coolant (in K)
 Pressure_cool_init = 2700000  # Pressure of the coolant at inlet (in Pa)
 roughness = 50e-6  # Roughness (m)
+film_cooling_percentage = 0.07
+film_cooling_slot_position = -0.036
 
 # %% Computation of channel geometry
 
@@ -269,7 +271,7 @@ coeffs = (n1, n2, n3, n4, n5, n6)
 xcanaux, ycanaux, larg_canal, larg_ailette_list, ht_canal, wall_thickness, \
 area_channel, nb_points_channel, y_coord_avec_canaux \
     = canaux_library(profile, widths, heights, thicknesses, coeffs, manifold_pos,
-             nbc, plot_detail, write_in_csv, figure_dpi)
+                     nbc, plot_detail, write_in_csv, figure_dpi)
 
 # Write the dimensions of the channels in a CSV file
 file_name = "output/channelvalue.csv"
@@ -336,6 +338,52 @@ data_chamber = (y_coord_avec_canaux, nbc, diam_throat, curv_radius_pre_throat, a
                 roughness, cross_section_area_list, mach_list, material_name, combustion_efficiency)
 
 # Call the main solving loop
+hlcor_list, hlcor_list_2, hotgas_visc_list, hotgas_cp_list, hotgas_cond_list, \
+hotgas_prandtl_list, hg_list, hotwall_temp_list, coldwall_temp_list, total_flux_list, \
+sigma_list, coolant_reynolds_list, coolant_temp_list, coolant_viscosity_list, \
+coolant_cond_list, coolant_cp_list, coolant_density_list, coolant_velocity_list, \
+coolant_pressure_list, coolant_prandtl_list, wallcond_list, sound_speed_coolant_list, hlnormal_list, \
+rad_flux_list, rad_CO2_list, rad_H2O_list, critical_heat_flux_list, Nu_list, Nu_corr_list, Dhy_list, \
+vapor_quality_list \
+    = mainsolver(data_hotgas, data_coolant, data_channel, data_chamber, chen=use_chen)
+
+film_length, film_temperature, index_liq_film_start, index_liq_film_end = t.film_cooled_length_stechman(
+    x_list=x_coord_list,
+    slot_position=film_cooling_slot_position,
+    debit_total=debit_mass_coolant,
+    pourcentage=film_cooling_percentage,
+    hg_coeff_list=hg_list,
+    coolant_temp_list=coolant_temp_list,
+    T_aw_list=recovery_hotgas_temp_list,
+    coolant_cp_list=coolant_cp_list,
+    chamber_radius_list=y_coord_list,
+    diam_film_holes=1e-3,
+    n_holes=nbc,
+    coolant_visc_list=coolant_viscosity_list)
+
+T_aw_gas_film, n_cool_gas_film = t.film_cooling_gas_hatch_papell(x_list=x_coord_list,
+                                                                 slot_position=film_cooling_slot_position + film_length,
+                                                                 debit_total=debit_mass_coolant,
+                                                                 pourcentage=film_cooling_percentage,
+                                                                 hg_condcoeff_list=hg_list,
+                                                                 slot_height=1e-3,
+                                                                 hotgas_speed_list=hotgas_velocity_list,
+                                                                 hotgas_visc_list=hotgas_visc_list,
+                                                                 hotgas_cp_list=hotgas_cp_list,
+                                                                 hotgas_density_list=hotgas_density_list,
+                                                                 T_film=film_temperature,
+                                                                 T_aw_nofilm=recovery_hotgas_temp_list,
+                                                                 engine_diam_at_gas_film_start=y_coord_list[
+                                                                     index_liq_film_end],
+                                                                 static_pressure=pressure_list[index_liq_film_end])
+
+recovery_hotgas_temp_list[index_liq_film_start:index_liq_film_end + 1] = [film_temperature] * (
+        index_liq_film_end - index_liq_film_start + 1)
+
+recovery_hotgas_temp_list[index_liq_film_end:] = T_aw_gas_film
+
+data_hotgas = (recovery_hotgas_temp_list, molar_mass, gamma_list, Pc, c_star, partial_p_H2O_list, partial_p_CO2_list)
+
 hlcor_list, hlcor_list_2, hotgas_visc_list, hotgas_cp_list, hotgas_cond_list, \
 hotgas_prandtl_list, hg_list, hotwall_temp_list, coldwall_temp_list, total_flux_list, \
 sigma_list, coolant_reynolds_list, coolant_temp_list, coolant_viscosity_list, \
@@ -518,10 +566,11 @@ parameters_plotter = (plot_detail, show_3d_plots, show_2D_temperature,
 data_plotter = (x_coord_list_mm, y_coord_list_mm, x_coord_list, y_coord_list, ycanaux, xcanaux,
                 cross_section_area_list, gamma_list, mach_list, pressure_list, Molfrac_H2O, Molfrac_CO2,
                 partial_p_H2O_list, partial_p_CO2_list, total_hotgas_temp_list, recovery_hotgas_temp_list,
-                static_hotgas_temp_list, larg_ailette_list, larg_canal, ht_canal, wall_thickness, area_channel, 
-                hlnormal_list, hlcor_list, hlcor_list_2, hotwall_temp_list, coldwall_temp_list, 
-                total_flux_list, critical_heat_flux_list, coolant_temp_list, coolant_pressure_list, 
-                sound_speed_coolant_list, coolant_velocity_list, wallcond_list, material_name, hg_list, coolant_density_list, 
+                static_hotgas_temp_list, larg_ailette_list, larg_canal, ht_canal, wall_thickness, area_channel,
+                hlnormal_list, hlcor_list, hlcor_list_2, hotwall_temp_list, coldwall_temp_list,
+                total_flux_list, critical_heat_flux_list, coolant_temp_list, coolant_pressure_list,
+                sound_speed_coolant_list, coolant_velocity_list, wallcond_list, material_name, hg_list,
+                coolant_density_list,
                 rad_CO2_list, rad_H2O_list, rad_flux_list, hotgas_visc_list, hotgas_cp_list, hotgas_cond_list,
                 hotgas_prandtl_list, sigma_list, coolant_reynolds_list, coolant_cond_list, coolant_cp_list,
                 coolant_viscosity_list, coolant_prandtl_list, newyhtre, verification, vapor_quality_list, Dhy_list)

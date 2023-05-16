@@ -55,6 +55,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
     phase = 0
     vapor_quality = 0
     vapor_quality_list = []
+    hotgas_temp_list.reverse()
 
     index_throat = y_coord_avec_canaux.index(min(y_coord_avec_canaux))
 
@@ -125,7 +126,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
             #     H_vap = PropsSI("H", "Q", 1, "P", new_coolant_pressure, fluid)
             #     vapor_quality = (H2 - H_liq) / (H_vap - H_liq)
 
-            # This loop's goal is to find sigma and the wall conductivity
+            # This loop'slot_height goal is to find sigma and the wall conductivity
             # It iterates until the wall temperatures have converged
             while abs(new_coldwall_temp - coldwall_temp) > .2 and abs(new_hotwall_temp - hotwall_temp) > .2:
                 coldwall_temp = new_coldwall_temp
@@ -210,7 +211,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
             delta_T_coolant = ((flux * dA_2) / ((debit_mass_coolant / nbc) * coolant_cp_list[i]))
             new_coolant_temp = coolant_temp_list[i] + delta_T_coolant
 
-            # Solving Colebrook's formula to obtain the Darcy-Weisbach friction factor
+            # Solving Colebrook'slot_height formula to obtain the Darcy-Weisbach friction factor
             frict_factor = t.darcy_weisbach(Dhy, Re_cool, roughness)
 
             # Computing pressure loss with the Darcy-Weisbach friction factor (no pressure loss taken into account)
@@ -268,7 +269,10 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
             coolant_density_list.append(new_cool_dens)
             coolant_prandtl_list.append(Pr_cool)
             sound_speed_list.append(new_cool_sound_spd)
-            if not chen:
+            if chen:
+                Nu_list.append("Using chen, not available")
+                Nu_corr_list.append("Using chen, not available")
+            else:
                 Nu_list.append(Nu)
                 Nu_corr_list.append(Nu * roughness_correction)
             Dhy_list.append(Dhy)
