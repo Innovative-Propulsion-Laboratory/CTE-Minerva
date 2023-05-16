@@ -316,7 +316,7 @@ def n_plots(x, y_list,
 def film_cooling_gas_hatch_papell(slot_height, x_list, slot_position,
                                   debit_total, pourcentage, hotgas_speed_list, hotgas_visc_list,
                                   hotgas_cp_list, hotgas_density_list, hg_condcoeff_list,
-                                  T_film, T_aw_nofilm, engine_diam_at_gas_film_start, static_pressure):
+                                  T_film, T_aw_list, engine_diam_at_gas_film_start, static_pressure):
     hotgas_cp_list.reverse()
     hotgas_visc_list.reverse()
 
@@ -351,7 +351,7 @@ def film_cooling_gas_hatch_papell(slot_height, x_list, slot_position,
             Reynolds_coolant * Prandtl_coolant * (hotgas_speed_list[i] / v_film)) ** 0.125)) for i, x in
                    enumerate(x_film)]
 
-    T_aw_with_film = [T_aw_nofilm[i] - n_cool * (T_aw_nofilm[i] - T_film) for i, n_cool in enumerate(n_cool_list)]
+    T_aw_with_film = [T_aw_list[i] - n_cool * (T_aw_list[i] - T_film) for i, n_cool in enumerate(n_cool_list)]
 
     return T_aw_with_film, n_cool_list
 

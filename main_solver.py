@@ -13,7 +13,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
     quantities at each point. The values obtained are then used on the next point.
     """
 
-    hotgas_temp_list, molar_mass, gamma_list, Pc, c_star, PH2O, PCO2 = hotgas_data
+    hotgas_temp_list_with_film, hotgas_temp_list_no_film, molar_mass, gamma_list, Pc, c_star, PH2O, PCO2 = hotgas_data
     init_coolant_temp, init_coolant_pressure, fluid, \
     debit_mass_coolant = coolant_data
     xcanaux, ycanaux, larg_canal, larg_ailette_list, ht_canal, wall_thickness, \
@@ -55,7 +55,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
     phase = 0
     vapor_quality = 0
     vapor_quality_list = []
-    hotgas_temp_list.reverse()
+    hotgas_temp_list_with_film.reverse()
 
     index_throat = y_coord_avec_canaux.index(min(y_coord_avec_canaux))
 
@@ -88,7 +88,7 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
             Pr_cool = (coolant_viscosity_list[i] * coolant_cp_list[i]) / coolant_cond_list[i]
 
             # Compute viscosity, Cp, conductivity and Prandtl number of the hot gases
-            hotgas_visc, hotgas_cp, hotgas_cond, hotgas_prandtl = t.hotgas_properties(hotgas_temp_list[i],
+            hotgas_visc, hotgas_cp, hotgas_cond, hotgas_prandtl = t.hotgas_properties(hotgas_temp_list_with_film[i],
                                                                                       molar_mass,
                                                                                       gamma_list[i])
 
@@ -178,18 +178,19 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
                 hl_cor2 = hl * (larg_canal[i] + 2 * nf * ht_canal[i]) / (larg_canal[i] + fin_width)
 
                 # Compute radiative heat transfer of H2O (W) and CO2 (C) (Luka Denies)
-                qW = 5.74 * ((PH2O[i] * y_coord_avec_canaux[i]) / 1e5) ** 0.3 * (hotgas_temp_list[i] / 100) ** 3.5
-                qC = 4 * ((PCO2[i] * y_coord_avec_canaux[i]) / 1e5) ** 0.3 * (hotgas_temp_list[i] / 100) ** 3.5
+                qW = 5.74 * ((PH2O[i] * y_coord_avec_canaux[i]) / 1e5) ** 0.3 * (
+                            hotgas_temp_list_no_film[i] / 100) ** 3.5
+                qC = 4 * ((PCO2[i] * y_coord_avec_canaux[i]) / 1e5) ** 0.3 * (hotgas_temp_list_no_film[i] / 100) ** 3.5
                 qRad = qW + qC
 
                 # Computing the heat flux and wall temperatures (Luka Denies)
-                flux = (hotgas_temp_list[i] - coolant_temp_list[i] + qRad / hg) / (
+                flux = (hotgas_temp_list_with_film[i] - coolant_temp_list[i] + qRad / hg) / (
                         1 / hg + 1 / hl_cor + wall_thickness[i] / wall_cond)
-                new_hotwall_temp = hotgas_temp_list[i] + (qRad - flux) / hg
+                new_hotwall_temp = hotgas_temp_list_with_film[i] + (qRad - flux) / hg
                 new_coldwall_temp = coolant_temp_list[i] + flux / hl
 
                 # Compute new value of sigma (used in the Bartz equation)
-                T_hotgas_throat = hotgas_temp_list[index_throat]
+                T_hotgas_throat = hotgas_temp_list_with_film[index_throat]
                 mach_hot_gases = mach_list[i]
                 sigma = (((new_hotwall_temp / (2 * T_hotgas_throat)) * (
                         1 + (((gamma_list[i] - 1) / 2) * (mach_hot_gases ** 2))) + 0.5) ** -0.68) * (
