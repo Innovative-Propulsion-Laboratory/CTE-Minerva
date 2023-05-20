@@ -67,6 +67,8 @@ def mainsolver(hotgas_data, coolant_data, channel_data, chamber_data, chen=False
     coldwall_temp = 300
     hotwall_temp = 300
 
+    debit_mass_coolant *= 0.93
+
     with tqdm(total=nb_points_channel,
               desc="█ Global resolution            ",
               unit="|   █", bar_format="{l_bar}{bar}{unit}",
